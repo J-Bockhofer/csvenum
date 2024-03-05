@@ -1,3 +1,4 @@
+use std::io::Write;
 /// Property will be converted to: 
 /// - Two functions:
 /// 
@@ -16,12 +17,45 @@ pub mod variants;
 use variants::Variant;
 
 pub mod table;
-use table::EnumTable;
+pub use table::EnumTable;
 
 pub mod utils;
-use utils::{indent_string};
+pub use utils::*;
 
-use std::io::Write;
+
+
+pub mod to_code;
+pub use to_code::{TextBlock, format_enum};
+
+#[derive(Debug)]
+pub struct Document {
+    //pub imports: TextBlock,
+    code: Vec<TextBlock>,
+}
+impl Document {
+    pub fn new() -> Self {
+        Document { 
+            code: vec![], 
+        }
+    }
+
+    pub fn add_block(&mut self, textblock: TextBlock) {
+        self.code.push(textblock);
+    }
+
+    pub fn write_to_file(&self, path: &str) {
+        let mut file = std::fs::File::create(path).expect("Unable to create file");
+        for block in &self.code {
+            for line in &block.lines {
+                writeln!(file, "{}", line).expect("Unable to write line to file");
+            }
+        }
+    }
+
+
+
+}
+
 
 
 #[derive(Debug)]
@@ -37,31 +71,9 @@ impl Vars {
     }
 }
 
-#[derive(Debug)]
-pub struct TextBlock {
-    pub lines: Vec<String>,
-}
-
-impl TextBlock {
-    pub fn with_lines(lines: Vec<String>) -> Self {
-        TextBlock { lines }
-    }
-
-    pub fn write_to_file(&self, path: &str) {
-        let mut file = std::fs::File::create(path).expect("Unable to create file");
-        for line in &self.lines {
-            writeln!(file, "{}", line).expect("Unable to write line to file");
-        }
-    }
-}
 
 
-#[derive(Debug)]
-pub struct MatchBlock {
-    pub match_this: String,
-    pub arms_lh: Vec<String>,
-    pub arms_rh: Vec<String>,
-}
+
 
 
 
@@ -106,45 +118,6 @@ pub fn make_vars(enumname: &str, variantnames: Vec<&str>, properties: Vec<&str>,
 
     Some(Vars::new(&enumname, variant_constants, property_constants))
 
-}
-
-pub fn format_enum(enumtable: &EnumTable) -> TextBlock {
-
-    let indent:usize = 4;
-
-    let mut lines: Vec<String> = vec![]; 
-    let enumname = enumtable.get_enumname();
-    let props = enumtable.get_properties();
-    let num_props = props.len();
-    let variants = enumtable.get_variants();
-
-    // Header
-    lines.push(format!("pub enum {} {{", enumname));
-
-    for row in 0..variants.len() {
-        let cvar= variants[row];
-        // Documentation
-        let l = format!("/// {}", cvar);
-        lines.push(indent_string(l, indent));     
-        for col in 1..num_props + 1 {
-            let l = format!("/// Property `{}` with value `{}` ", &props[col - 1], enumtable.data[col][row]);
-            lines.push(
-                indent_string(l, indent)
-            ); 
-        }
-        // Declaration
-        let l = format!("{},", cvar);
-        lines.push(
-            indent_string(l, indent)
-        );
-    }
-
-    // Footer
-    lines.push(
-        format!("}}")
-    );
-
-    TextBlock::with_lines(lines)
 }
 
 
