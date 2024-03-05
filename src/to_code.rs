@@ -74,7 +74,7 @@ impl VarType {
         // vec![]
         // String::new()
         // 
-    
+        //println!("{}", &type_str);
         // Types that can be constants
         // ""
         // 0
@@ -89,18 +89,19 @@ impl VarType {
         let actual_type = match parts.len() {
             1 => {parts[0]},
             2 => {parts[1]},
-            _ => {panic!("Weird type specification {}", type_str)}
+            _ => {panic!("Weird type specification 1 {}", type_str)}
         };
+        //println!("{}", actual_type);
         // strip reference 
         let actual_type: String = actual_type.chars().filter(|&c|
-            c != '&' && c != '1' && c != '2' && c != '3' && c != '4' && c != '5' && c != '6' && c != '7' && c != '8' && c != '9' && c != '0' 
+            c != '&' && c != '1' && c != '2' && c != '3' && c != '4' && c != '5' && c != '6' && c != '7' && c != '8' && c != '9' && c != '0' && c != ' ' 
         ).collect();
-    
+        //println!("{}", actual_type.as_str());
         match actual_type.as_str() {
-            "" => {panic!("Weird type specification {}", type_str)},
+            "" => {panic!("Weird type specification 2 {}", type_str)},
             "str" => {VarType::with(type_str, "&'static str", Some(DeclarationWrapper::with("\"", "\"")))}
             "i" | "u" | "f" | "isize" | "usize" => {VarType::with(type_str, type_str, None)}
-            _ => {panic!("Weird type specification {}", type_str)}
+            _ => {panic!("Weird type specification 3 {}", type_str)}
         }
     }
 

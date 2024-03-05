@@ -14,6 +14,7 @@ pub mod properties;
 use properties::ConstProperty;
 
 pub mod variants;
+use to_code::{funcblock::{make_fn_get_all_variants, generate_fn_blocks}, format_consts};
 use variants::Variant;
 
 pub mod table;
@@ -22,7 +23,8 @@ pub use table::EnumTable;
 pub mod utils;
 pub use utils::*;
 
-
+pub mod reader;
+use reader::{read_file_lines, write_lines_to_file};
 
 pub mod to_code;
 pub use to_code::{TextBlock, format_enum};
@@ -52,10 +54,43 @@ impl Document {
         }
     }
 
-
+    pub fn print_to_lines(self) -> Vec<String> {
+        let mut lines = vec![];
+        for block in self.code {
+            for line in block.lines {
+                lines.push(line);
+            }
+        }
+        lines
+    }
 
 }
 
+pub fn generate_from_csv_to_file() {
+    let lines = read_file_lines("tests/pisse.csv").unwrap();
+
+    let et = EnumTable::from_csv_lines(lines).unwrap();
+
+    let variants = et.get_variants();
+    //let properties = et.get_properties();
+    //let types = et.get_types();
+    let enumname = et.get_enumname();
+
+    //let vars = make_vars(enumname, variants, properties, types).unwrap();
+
+    let mut code_doc = Document::new();
+    code_doc.add_block(format_enum(&et));
+    code_doc.add_block(make_fn_get_all_variants(enumname, variants));
+
+    code_doc.add_block(format_consts(&et));
+    let fnblocks = generate_fn_blocks(&et);
+    for fun in fnblocks {
+        code_doc.add_block(fun);
+    }
+
+    let lines = code_doc.print_to_lines();
+    write_lines_to_file("tests/pisse.rs", lines).unwrap();    
+}
 
 
 #[derive(Debug)]
@@ -70,11 +105,6 @@ impl Vars {
         Vars { enumname: enumname.to_string(), variants, properties }
     }
 }
-
-
-
-
-
 
 
 #[derive(Debug)]
@@ -128,9 +158,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let x = make_vars("Country", vec!["Australia"], vec!["Alpha3"], vec!["&'static str"]).unwrap();
-
-        println!("{:?}", &x);
+        generate_from_csv_to_file();
     }
 }
 
