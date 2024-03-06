@@ -67,6 +67,27 @@ impl Document {
 }
 
 
+pub struct EnumModule {
+    pub rootdir: String,
+
+    // Used Variants, Properties, Types and Values
+
+
+    // Imports
+
+    // EnumBlock
+
+    // A number of ConstBlocks (per property)
+
+    // Two functions (as & from) per property
+
+    // A config (indenting, split files, functions as impl for Enum)
+
+    // 
+
+}
+
+
 pub fn generate_from_csv_to_file() {
     let lines = read_file_lines("tests/pisse.csv").unwrap();
 
