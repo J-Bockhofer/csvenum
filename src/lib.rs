@@ -11,11 +11,11 @@ use std::io::Write;
 /// 
 ///     const (VARIANT)_(NAME): (type_str)
 pub mod properties;
-use properties::ConstProperty;
+//use properties::ConstProperty;
 
 pub mod variants;
-use to_code::{funcblock::{make_fn_get_all_variants, generate_fn_blocks}, format_consts};
-use variants::Variant;
+
+//use variants::Variant;
 
 pub mod table;
 pub use table::EnumTable;
@@ -28,7 +28,7 @@ use reader::{read_file_lines, write_lines_to_file};
 
 pub mod to_code;
 pub use to_code::{TextBlock, format_enum};
-
+use to_code::{funcblock::{make_fn_get_all_variants, generate_fn_blocks}, format_consts};
 #[derive(Debug)]
 pub struct Document {
     //pub imports: TextBlock,
@@ -66,6 +66,7 @@ impl Document {
 
 }
 
+
 pub fn generate_from_csv_to_file() {
     let lines = read_file_lines("tests/pisse.csv").unwrap();
 
@@ -93,7 +94,7 @@ pub fn generate_from_csv_to_file() {
 }
 
 
-#[derive(Debug)]
+/* #[derive(Debug)]
 pub struct Vars {
     pub enumname: String,
     pub variants: Vec<Variant>,
@@ -104,7 +105,7 @@ impl Vars {
     pub fn new(enumname: &str, variants: Vec<Variant>, properties: Vec<ConstProperty>) -> Self {
         Vars { enumname: enumname.to_string(), variants, properties }
     }
-}
+} */
 
 
 #[derive(Debug)]
@@ -120,7 +121,7 @@ pub struct Closure {
 /// TYPES    | &'static str | usize
 /// EnumName | property1    | property2
 /// Variant1 | Value1       | Value2
-pub fn make_vars(enumname: &str, variantnames: Vec<&str>, properties: Vec<&str>, types: Vec<&str>) -> Option<Vars> {
+/* pub fn make_vars(enumname: &str, variantnames: Vec<&str>, properties: Vec<&str>, types: Vec<&str>) -> Option<Vars> {
     if properties.len() != types.len() {todo!("Log error: Types and Properties must have the same length")}
     //let num_variants = variantnames.len();
     let num_props = properties.len();
@@ -148,7 +149,7 @@ pub fn make_vars(enumname: &str, variantnames: Vec<&str>, properties: Vec<&str>,
 
     Some(Vars::new(&enumname, variant_constants, property_constants))
 
-}
+} */
 
 
 

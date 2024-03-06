@@ -1,4 +1,4 @@
-
+/// Needs to handle from_csv_lines to replace $ with , again.
 #[derive(Debug)]
 pub struct EnumTable {
     /// h1 contains types
@@ -62,8 +62,8 @@ impl EnumTable {
         let num_lines = lines.len();
         if lines.is_empty() || num_lines < 3 {return Option::None;}
         
-        let h1: Vec<String> = lines[0].as_ref().split(',').map(|x|{x.replace("\"", " ").trim().to_string() }).collect();
-        let h2: Vec<String> = lines[1].as_ref().split(',').map(|x|{x.replace("\"", " ").trim().to_string()}).collect();
+        let h1: Vec<String> = lines[0].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string() }).collect();
+        let h2: Vec<String> = lines[1].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string()}).collect();
 
         let num_cols = h1.len(); // one less column bc variants are not properties/columns
 
@@ -72,7 +72,7 @@ impl EnumTable {
             data.push(vec![]); // init empty colum
         }
         for row in 2..num_lines {
-            let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").trim().to_string()}).collect();
+            let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string()}).collect();
             for col in 0..num_cols {
                 data[col].push(line[col].clone());
             }

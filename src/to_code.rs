@@ -10,6 +10,10 @@ pub use constblock::format_consts;
 pub mod funcblock;
 //pub use funcblock::format_fn_as_property;
 
+pub mod types;
+
+pub mod codeblocks;
+
 #[derive(Debug)]
 pub struct TextBlock {
     pub block_type: BlockType,

@@ -1,4 +1,4 @@
-
+/* 
 #[derive(Debug)]
 pub struct ConstProperty {
     pub name: String,
@@ -34,4 +34,4 @@ impl ConstProperty {
             from_fn_hdr,
          }
     }
-}
+} */
