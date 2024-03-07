@@ -7,6 +7,29 @@ use type_const::ConstType;
 
 pub mod type_container;
 use type_container::ContainerType;
+
+
+
+use thiserror::Error as Error;
+
+
+#[derive(Error, Debug, PartialEq)]
+pub enum TypeError {
+
+    #[error("A string that should represent a valid type could not get parsed -> {0} ")]
+    Unknown(String),
+
+    #[error("Parsed table needs to have at least 3 lines.")]
+    ConstTError,
+    #[error("Number of types:  and number of properties:  do not match!")]
+    ContainerTError,
+    #[error("Number of types: ")]
+    TTypeError,
+ 
+
+}
+
+
 /// We take in text like this: 
 /// ```
 ///  let text = vec!["&str","ABC","SomeText"];
@@ -27,7 +50,7 @@ pub trait TypeToStr {
     fn to_let_typestr(&self) -> String;
     fn to_fn_arg(&self) -> String;
     fn get_value_wrapper(&self) -> TypeWrapper;
-    fn from_typestr<T: AsRef<str>>(typestr: T) -> Option<Self> where Self: Sized;
+    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;
     //fn declare_value<T: AsRef<str>>(&self, value: T) -> String;
 
 }
@@ -138,8 +161,8 @@ pub fn sanitize_typestr<T: AsRef<str>>(typestr: T) -> String {
 }
 
 impl TType {
-    /// the typestr will have to be sanitized by this point meaning no whitespaces (.trim()) or odd characters.
-    pub fn from_typestr<T: AsRef<str>>(typestr: T) -> Option<Self> {
+    // the typestr will have to be sanitized by this point meaning no whitespaces (.trim()) or odd characters.
+/*     pub fn from_typestr<T: AsRef<str>>(typestr: T) -> Option<Self> {
         let typestr = typestr.as_ref();
 
         let parsed_type = sanitize_typestr(typestr);
@@ -157,7 +180,65 @@ impl TType {
         }
         None
 
+    } */
+
+}
+
+impl TypeToStr for TType {
+    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
+        let typestr = typestr.as_ref();
+
+        let parsed_type = sanitize_typestr(typestr);
+
+        //println!("TType - typestr sanitized: {}", &parsed_type);
+
+        let _container = ContainerType::from_typestr(&parsed_type);
+        if _container.is_ok() {
+            return Ok(Self::ContainerType(_container.unwrap()));
+        } 
+
+        let _const = ConstType::from_typestr(parsed_type);
+        if _const.is_ok() {
+            return Ok(Self::ConstType(_const.unwrap()));
+        }
+        Err(TypeError::Unknown(typestr.to_string()))     
     }
+    fn get_value_wrapper(&self) -> TypeWrapper {
+        match self {
+            Self::ConstType(x) => {x.get_value_wrapper()},
+            Self::ContainerType(x) => {x.get_value_wrapper()},
+            Self::Regex => {todo!("Implement Regex")},
+        }
+    }
+    fn to_const_typestr(&self) -> String {
+        match self {
+            Self::ConstType(x) => {x.to_const_typestr()},
+            Self::ContainerType(x) => {x.to_const_typestr()},
+            Self::Regex => {todo!("Implement Regex")},
+        }
+    }
+    fn to_let_typestr(&self) -> String {
+        match self {
+            Self::ConstType(x) => {x.to_let_typestr()},
+            Self::ContainerType(x) => {x.to_let_typestr()},
+            Self::Regex => {todo!("Implement Regex")},
+        }         
+    }
+    fn to_fn_arg(&self) -> String {
+        match self {
+            Self::ConstType(x) => {x.to_fn_arg()},
+            Self::ContainerType(x) => {x.to_fn_arg()},
+            Self::Regex => {todo!("Implement Regex")},
+        }        
+    }
+    fn to_return_typestr(&self) -> String {
+        match self {
+            Self::ConstType(x) => {x.to_return_typestr()},
+            Self::ContainerType(x) => {x.to_return_typestr()},
+            Self::Regex => {todo!("Implement Regex")},
+        }             
+    }
+
 
 }
 
@@ -183,5 +264,11 @@ mod tests {
             ]
         ));
         assert_eq!(ttype, expected);
+
+        let typestr = " Vec< &str> ".to_string();
+        let ttype = TType::from_typestr(typestr).unwrap().to_const_typestr();
+        let expected = "OnceLock<Vec<&str>>".to_string();
+        assert_eq!(ttype, expected);
+
     }
 }

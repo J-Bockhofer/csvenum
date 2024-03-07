@@ -111,9 +111,8 @@ impl VarType {
 
 }
 
-
 #[derive(Debug, Clone, Default)]
-pub struct MatchBlock {
+struct MatchBlock {
     pub match_this: String,
     num_arms: usize,
     arms_lh: Vec<String>,
@@ -159,10 +158,4 @@ impl MatchBlock {
 
     }
 
-}
-
-pub fn flatten_into(src: &Vec<String>, dest: &mut Vec<String>) {
-     for item in src {
-        dest.push(item.to_string());
-     } 
 }

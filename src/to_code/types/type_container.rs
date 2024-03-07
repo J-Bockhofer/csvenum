@@ -1,5 +1,5 @@
 
-use super::{TypeToStr, TypeWrapper, type_const::ConstType};
+use super::{TypeToStr, TypeWrapper, type_const::ConstType, TypeError};
 /// `ContainerType` - represents a type that contains values 
 /// 
 /// Limitations:
@@ -129,15 +129,15 @@ impl TypeToStr for ContainerType {
         }        
     }
 
-    fn from_typestr<T: AsRef<str>>(typestr: T) -> Option<Self> {
+    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError>  {
         let typestr = typestr.as_ref();
         if typestr.contains("Vec") {
             // we have ourselves a Vec... boiii
             let typestr = typestr.replace("&Vec","Vec").replace("Vec<","").replace(">", "");
             // parsed type now only contains the inner typestr
-            let inner_type = ConstType::from_typestr(typestr);
-            if inner_type.is_none() {return None}
-            return Some(Self::Vector(inner_type.unwrap()));
+            let inner_type = ConstType::from_typestr(typestr)?;
+            //if inner_type.is_none() {return None}
+            return Ok(Self::Vector(inner_type));
         } else if typestr.contains("(") {
             // we have ourselves a Tuple
             let typestr = typestr.replace("&(","(").replace("(","").replace(")", "");
@@ -145,13 +145,14 @@ impl TypeToStr for ContainerType {
             let mut vec_types: Vec<ConstType> = vec![];
             for inner in inner_types {
                 //println!("ContainerType::Tuple - typestr into const: {}", inner);
-                let inner = ConstType::from_typestr(inner);
-                if inner.is_some() {vec_types.push(inner.unwrap());}
+                let inner = ConstType::from_typestr(inner)?;
+                vec_types.push(inner);
+            
             }
-            Some(Self::Tuple(vec_types))
+            Ok(Self::Tuple(vec_types))
 
         } else {
-            None
+            Err(TypeError::Unknown(typestr.to_string()))  
         }
     }
 

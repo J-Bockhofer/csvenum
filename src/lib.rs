@@ -11,7 +11,15 @@ use std::io::Write;
 /// 
 ///     const (VARIANT)_(NAME): (type_str)
 pub mod properties;
+
+
+//use et_error::ETError;
+
 //use properties::ConstProperty;
+pub mod parser;
+use parser::TableParser;
+
+pub mod enumtable;
 
 pub mod variants;
 
@@ -86,6 +94,12 @@ pub struct EnumModule {
     // 
 
 }
+
+/// Main struct that will be called with the csv file
+pub struct Enumdotrs {
+
+}
+
 
 
 pub fn generate_from_csv_to_file() {

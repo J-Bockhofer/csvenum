@@ -1,4 +1,4 @@
-use super::{TypeToStr, TypeWrapper};
+use super::{TypeToStr, TypeWrapper, TypeError};
 /// ## ConstType
 /// 
 /// Can only have a single value and can be declared as const.
@@ -85,14 +85,14 @@ impl TypeToStr for ConstType {
             Self::Numeric(_) => {TypeWrapper::with("","")},
         }
     }
-    fn from_typestr<T: AsRef<str>>(typestr: T) -> Option<Self> {
+    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> {
         let typestr = typestr.as_ref();
 
         let parts: Vec<&str> = typestr.split(' ').collect();
         let actual_type = match parts.len() {
             1 => {parts[0]},
             2 => {parts[1]},
-            _ => {panic!("Weird type specification 1 {}", typestr)}
+            _ => {return Err(TypeError::Unknown(typestr.to_string()));}
         };
 
         let actual_type: String = actual_type.chars().filter(|&c|
@@ -100,14 +100,14 @@ impl TypeToStr for ConstType {
         ).collect();
         //println!("{}", actual_type.as_str());
         match actual_type.as_str() {
-            "" => {panic!("Weird type specification 2 {}", typestr)},
+            "" => {Err(TypeError::Unknown(typestr.to_string()))},
             "str" => {
-                Some(Self::Char)
+                Ok(Self::Char)
             }
             "i" | "u" | "f" | "isize" | "usize" => {
-                Some(Self::Numeric(typestr.to_string()))
+                Ok(Self::Numeric(typestr.to_string()))
             }
-            _ => {panic!("Weird type specification 3 {}", typestr)}
+            _ => {Err(TypeError::Unknown(typestr.to_string()))}
         }
     }
 }

@@ -1,6 +1,12 @@
 
 
-use super::{TextBlock, EnumTable, indent_string, VarType, MatchBlock, flatten_into};
+use super::{TextBlock, EnumTable, indent_string, VarType, MatchBlock};
+ fn flatten_into(src: &Vec<String>, dest: &mut Vec<String>) {
+    for item in src {
+       dest.push(item.to_string());
+    } 
+}
+
 
 
 #[derive(Debug)]
