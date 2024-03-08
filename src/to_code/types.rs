@@ -1,12 +1,25 @@
 ///! Convert Types passed as a string to more useful representations for code gen.
 ///! Allows for specifying "&str" in a textfile to generate associated representations in function signatures and expressions. 
 ///!
+pub mod parser;
+
+pub mod numeric;
+pub use numeric::NumericType;
+
+pub mod stringtype;
+pub use stringtype::StringType;
+
+pub mod containers;
+pub use containers::ContainerType;
+
+pub mod special;
+pub use special::SpecialType;
 
 pub mod type_const;
 use type_const::ConstType;
 
 pub mod type_container;
-use type_container::ContainerType;
+use type_container::ContainerType as CoType;
 
 
 
@@ -30,9 +43,44 @@ pub enum TypeError {
 }
 
 
+/// Rust Type primitive (no value or name attached), has functions for:
+/// 
+/// - constructing itself from a given string
+/// 
+/// - format to different representations type in fn arg, return value, const/static, 
+/// 
+/// Excludes:
+/// Result
+/// Option
+/// Error
+pub enum RType {
+    /// Any Numeric Type
+    Numeric(NumericType),
+    /// Any String Type
+    String(StringType),
+    /// Any Container Type, except for Option and Result
+    Container(ContainerType), //Box<RType> Type of Container with Box<RType>
+    /// Special Types that need special treatment, very special incl:
+    /// 
+    /// Regex
+    /// 
+    /// Enum ( tuple of enum?? )
+    Special(SpecialType),
+
+}
+
+
+pub struct TypeModifier {
+    pub is_reference: bool,
+    pub lifeftime: String,
+}
+
+
 /// We take in text like this: 
 /// ```
+///  use::crate::to_code::{TType, TypeToStr}
 ///  let text = vec!["&str","ABC","SomeText"];
+///  // get the type
 /// ``` 
 /// Every type (here: &str) will have a representation in:
 /// 
@@ -49,7 +97,7 @@ pub trait TypeToStr {
     fn to_const_typestr(&self) -> String;
     fn to_let_typestr(&self) -> String;
     fn to_fn_arg(&self) -> String;
-    fn get_value_wrapper(&self) -> TypeWrapper;
+    fn get_value_wrapper(&self) -> TypeWrapper; // questionable..
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;
     //fn declare_value<T: AsRef<str>>(&self, value: T) -> String;
 
@@ -105,7 +153,7 @@ impl TypeWrapper {
 #[derive(Debug, PartialEq, Eq)]
 pub enum TType {
     ConstType(ConstType),
-    ContainerType(ContainerType),
+    ContainerType(CoType),
     ///
     /// Regex: Regex'
     /// 
@@ -160,30 +208,6 @@ pub fn sanitize_typestr<T: AsRef<str>>(typestr: T) -> String {
     parsed_type
 }
 
-impl TType {
-    // the typestr will have to be sanitized by this point meaning no whitespaces (.trim()) or odd characters.
-/*     pub fn from_typestr<T: AsRef<str>>(typestr: T) -> Option<Self> {
-        let typestr = typestr.as_ref();
-
-        let parsed_type = sanitize_typestr(typestr);
-
-        //println!("TType - typestr sanitized: {}", &parsed_type);
-
-        let _container = ContainerType::from_typestr(&parsed_type);
-        if _container.is_some() {
-            return Some(Self::ContainerType(_container.unwrap()));
-        } 
-
-        let _const = ConstType::from_typestr(parsed_type);
-        if _const.is_some() {
-            return Some(Self::ConstType(_const.unwrap()));
-        }
-        None
-
-    } */
-
-}
-
 impl TypeToStr for TType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
         let typestr = typestr.as_ref();
@@ -192,7 +216,7 @@ impl TypeToStr for TType {
 
         //println!("TType - typestr sanitized: {}", &parsed_type);
 
-        let _container = ContainerType::from_typestr(&parsed_type);
+        let _container = CoType::from_typestr(&parsed_type);
         if _container.is_ok() {
             return Ok(Self::ContainerType(_container.unwrap()));
         } 
@@ -250,12 +274,12 @@ mod tests {
     fn test_from_typestr() {
         let typestr = " Vec< &str>".to_string();
         let ttype = TType::from_typestr(typestr).unwrap();
-        let expected = TType::ContainerType(ContainerType::Vector(ConstType::Char));
+        let expected = TType::ContainerType(CoType::Vector(ConstType::Char));
         assert_eq!(ttype, expected);
 
         let typestr = " (usize, f32, f64, u8 ) ".to_string();
         let ttype = TType::from_typestr(typestr).unwrap();
-        let expected = TType::ContainerType(ContainerType::Tuple(
+        let expected = TType::ContainerType(CoType::Tuple(
             vec![
                 ConstType::Numeric(format!("usize")),
                 ConstType::Numeric(format!("f32")),

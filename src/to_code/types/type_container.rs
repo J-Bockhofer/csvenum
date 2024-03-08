@@ -63,7 +63,6 @@ impl TypeToStr for ContainerType {
             Self::Tuple(_) => {TypeWrapper::with("(", ")")},
         }
     }
-    
     fn to_return_typestr(&self) -> String {
         match self {
             Self::Vector(x) => {

@@ -21,17 +21,23 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 4. property type: Vec -> checking for duplicate values in table?
 
+5. property type: Fixed array
+
 5. Check duplicate values in consts ... are okay no? it only depends on what you call the function with, if country has 108 Citizens and 108m² it is the same value but the meaning is different depending on context/ property name ... yes but if its the same property dingus lol
 
-6. Const property type: Regex
+6. Const property type: Regex, make r'' itself be a const &str that will then get passed to the regex constructor in the OnceLock (also need to cargo add regex, use regex::Regex)
 
 7. Error in return types
 
 8. impl Ord, Eq
 
-9. nested containers? but then not as csv.. seems overkill
+9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways
 
-10 impl std::fmt::Display on the enum
+10. impl std::fmt::Display on the enum
+
+11. Get variant as name str for free
+
+12. empty line in csv [x]
 
 ## Default Behaviour
 

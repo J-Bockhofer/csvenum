@@ -1,17 +1,20 @@
 
-/* use thiserror::Error as Error;
+use std::collections::HashSet;
+use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
-pub enum ParserError {
-
-    #[error("Parsed table needs to have at least 3 lines.")]
-    TableEmptyOrShort,
-    #[error("Number of types: {0} and number of properties: {1} do not match!")]
-    TableHeaderMismatch(usize, usize),
-    #[error("Number of types: {0} and number of properties: {1} do not match in data row {2}!")]
-    TableDataMismatch(usize, usize, usize),    
-
-} */
+pub enum TableError {
+    #[error("Requested variant with name: {0} does not exist.")]
+    NoVariantWithName(String),
+    #[error("Requested property with name: {0} does not exist.")]
+    NoPropertyWithName(String),    
+    #[error("Out of bounds. Passed index {0} for data with {1} rows.")]
+    OutOfBoundsRow(usize, usize),
+    #[error("Out of bounds. Passed index {0} for data with {1} columns.")]
+    OutOfBoundsColumn(usize, usize),
+    #[error("Duplicate value detected in column: {0}, row: {1} with value: {2}.")]
+    DuplicateValue(String, usize, String),
+}
 
 use crate::to_code::types::{TType, TypeToStr};
 
@@ -31,7 +34,7 @@ use crate::to_code::types::{TType, TypeToStr};
 /// 
 ///     let table_parser = TableParser::from_csv_lines(rows).unwrap();
 ///     let enumtable = table_parser.to_enumtable().unwrap();
-///     assert_eq!(enumtable.get_name(), "MyEnumName");
+///     assert_eq!(enumtable.get_col_of_property("Property1"), Some(0));
 /// 
 /// ```
 /// 
@@ -80,14 +83,13 @@ impl EnumTable {
     pub fn get_row_of_variant(&self, var: &str) -> Option<usize> {
         self.variants.iter().position(|x| x == var)
     }
-    pub fn get_value_by_col_row(&self, col: usize, row: usize) -> Option<String> {
+    pub fn get_value_by_col_row(&self, col: usize, row: usize) -> Result<String, TableError> {
         let num_cols = self.data.len();
-        if col >= num_cols {return None}
+        if col >= num_cols {return Err(TableError::OutOfBoundsColumn(col, num_cols))}
         let num_rows = self.data[col].len();
-        if row >= num_rows {return None}
-        return Some(self.data[col][row].to_owned())
+        if row >= num_rows {return Err(TableError::OutOfBoundsRow(row, num_rows))}
+        return Ok(self.data[col][row].to_owned())
     }
-
     pub fn parse_types(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let mut parsed_types = vec![];
         for type_str in &self.types {
@@ -97,11 +99,36 @@ impl EnumTable {
         self.parsed_types = parsed_types;
         Ok(())
     }
+    /// Checks each column for duplicate values
+    pub fn check_duplicates(&self) -> Result<(), TableError> {
+        let mut unique_checker = HashSet::new();
+        let num_cols = self.properties.len();
+        let num_rows = self.variants.len();
+        for i in 0..num_cols {
+            let prop = &self.properties[i];
+            for j in 0..num_rows {
+                let value = &self.data[i][j];
+                if !unique_checker.insert(value) {
+                    return Err(TableError::DuplicateValue(prop.to_owned(), j, value.to_owned()));
+                }                
+            }
+            unique_checker.clear();
+        }
+        Ok(())
+    }
+    /// No extra bounds check other than Rust internal panic
     pub fn get_variant_at(&self, idx: usize) -> &String {
         &self.variants[idx]
     }
+    /// No extra bounds check other than Rust internal panic
     pub fn get_property_at(&self, idx: usize) -> &String {
         &self.properties[idx]
     }    
-
+    pub fn get_value_by_prop_var(&self, property: &str, variant: &str) -> Result<String, TableError> {
+        let prop_idx = self.get_col_of_property(property);
+        let col_idx = if prop_idx.is_none() {return Err(TableError::NoPropertyWithName(property.to_string()))} else {prop_idx.unwrap()};
+        let var_idx = self.get_row_of_variant(variant);
+        let row_idx = if var_idx.is_none() {return Err(TableError::NoVariantWithName(variant.to_string()))} else {var_idx.unwrap()};
+        Ok(self.get_value_by_col_row(col_idx, row_idx)?)
+    }
 }

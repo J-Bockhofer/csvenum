@@ -72,6 +72,7 @@ impl EnumTable {
             data.push(vec![]); // init empty colum
         }
         for row in 2..num_lines {
+            if lines[row].as_ref().is_empty() {continue}
             let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string()}).collect();
             for col in 0..num_cols {
                 data[col].push(line[col].clone());

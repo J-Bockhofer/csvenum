@@ -12,12 +12,13 @@ use std::io::Write;
 ///     const (VARIANT)_(NAME): (type_str)
 pub mod properties;
 
+extern crate regex;
 
 //use et_error::ETError;
 
 //use properties::ConstProperty;
 pub mod parser;
-use parser::TableParser;
+//use parser::TableParser;
 
 pub mod enumtable;
 
@@ -103,6 +104,7 @@ pub struct Enumdotrs {
 
 
 pub fn generate_from_csv_to_file() {
+    
     let lines = read_file_lines("tests/pisse.csv").unwrap();
 
     let et = EnumTable::from_csv_lines(lines).unwrap();

@@ -5,15 +5,12 @@ use super::enumtable::EnumTable;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum ParserError {
-
     #[error("Parsed table needs to have at least 3 lines.")]
     TableEmptyOrShort,
     #[error("Number of types: {0} and number of properties: {1} do not match!")]
     TableHeaderMismatch(usize, usize),
     #[error("Number of types: {0} and number of properties: {1} do not match in data row {2}. Missing Value?")]
     TableDataMismatch(usize, usize, usize),
- 
-
 }
 
 /// Parses a Vec<&str> with CSV to an intermediate representation
@@ -105,6 +102,7 @@ impl TableParser {
             data.push(vec![]); // init empty colum
         }
         for row in dat_row_idx..num_lines {
+            if lines[row].as_ref().is_empty() {continue}
             let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string()}).collect();
             if line.len() != num_cols {return Err(ParserError::TableDataMismatch(num_cols, line.len(), row))}
             for col in 0..num_cols {
@@ -145,6 +143,7 @@ impl ToEnumTable for TableParser {
         // values 
         let values = &self.data_cols[1..self.data_cols.len()];
         enumtable.set_data(values.to_owned());
+        enumtable.check_duplicates()?;
 
         Ok(enumtable)
     }
