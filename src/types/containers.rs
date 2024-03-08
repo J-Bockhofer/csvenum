@@ -1,9 +1,9 @@
-use super::{RType, RTypeTrait, TypeError};
+use super::{RType, RTypeTrait, TypeError, Reference};
 use regex::Regex;
 use std::sync::OnceLock;
 
 /// Vector regex
-pub const VECTOR_REGEX_STR: &'static str = r"^Vec<([\w&_:<>\(\)\[\], ]*)>";
+pub const VECTOR_REGEX_STR: &'static str = r"^Vec<(.*)>"; // why is this so explicit about the char set? -> r"^Vec<([\w&_:<>\(\)\[\], ]*)>";
 pub static VECTOR_REGEX: OnceLock<Regex> = OnceLock::new();
 
 /// Array regex
@@ -75,22 +75,22 @@ mod tests {
     fn test_parse_container_type() { 
         let input = "Vec< &str>";
         let result = ContainerType::from_typestr(input).unwrap();
-        let expected = ContainerType::Vector(Box::new(RType::String(StringType::str)));
+        let expected = ContainerType::Vector(Box::new(RType::String(Reference::Naked,StringType::str)));
         assert_eq!(result, expected);
 
         let input = "[usize, 3]";
         let result = ContainerType::from_typestr(input).unwrap();
         let expected = ContainerType::Array(
-            Box::new(RType::Numeric(NumericType::usize)), 3
+            Box::new(RType::Numeric(Reference::None,NumericType::usize)), 3
         );
         assert_eq!(result, expected);
 
         let input = "(usize,usize,enum:MyEnum)";
         let result = ContainerType::from_typestr(input).unwrap();
         let expected = ContainerType::Tuple( vec![
-            Box::new(RType::Numeric(NumericType::usize)), 
-            Box::new(RType::Numeric(NumericType::usize)), 
-            Box::new(RType::Special(SpecialType::Enum("MyEnum".to_string())))
+            Box::new(RType::Numeric(Reference::None,NumericType::usize)), 
+            Box::new(RType::Numeric(Reference::None,NumericType::usize)), 
+            Box::new(RType::Special(Reference::None,SpecialType::Enum("MyEnum".to_string())))
         ]);
         assert_eq!(result, expected);
 
