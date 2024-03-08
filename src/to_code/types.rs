@@ -1,8 +1,6 @@
 ///! Convert Types passed as a string to more useful representations for code gen.
 ///! Allows for specifying "&str" in a textfile to generate associated representations in function signatures and expressions. 
 ///!
-pub mod parser;
-
 pub mod numeric;
 pub use numeric::NumericType;
 
@@ -14,12 +12,6 @@ pub use containers::ContainerType;
 
 pub mod special;
 pub use special::SpecialType;
-
-pub mod type_const;
-use type_const::ConstType;
-
-pub mod type_container;
-use type_container::ContainerType as CoType;
 
 pub mod rtype;
 pub use rtype::{RType, RTypeString};
@@ -44,13 +36,6 @@ pub enum TypeError {
     #[error("A string that should represent a valid type could not get parsed -> {0} ")]
     RTypeUnknown(String),
 
-    #[error("Parsed table needs to have at least 3 lines.")]
-    ConstTError,
-    #[error("Number of types:  and number of properties:  do not match!")]
-    ContainerTError,
-    #[error("Number of types: ")]
-    TTypeError,
- 
 
 }
 
@@ -158,121 +143,7 @@ impl TypeWrapper {
 
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum TType {
-    ConstType(ConstType),
-    ContainerType(CoType),
-    ///
-    /// Regex: Regex'
-    /// 
-    /// Fn return: &Regex
-    /// 
-    /// Fn arg: &Regex
-    /// 
-    /// Const expr: OnceLock<Regex>
-    /// 
-    /// Let expr: input
-    /// 
-    /// Declare with value
-    Regex,
-}
 
-pub fn sanitize_typestr<T: AsRef<str>>(typestr: T) -> String {
-    let typestr = typestr.as_ref();
-    if typestr.len() > 128 {panic!("I think your typestr is too long: {}", typestr)}
-    let mut parsed_type = String::new();
-
-    for char in typestr.chars() {
-        match char {
-            ' ' => {continue},
-            'V' => parsed_type.push('V'),
-            '&' => parsed_type.push('&'),
-            'e' => parsed_type.push('e'),
-            'c' => parsed_type.push('c'),
-            '<' => parsed_type.push('<'),
-            '>' => parsed_type.push('>'),
-            '(' => parsed_type.push('('),
-            ')' => parsed_type.push(')'),
-            ',' => parsed_type.push(','),
-            '1' => parsed_type.push('1'),  // 16
-            '2' => parsed_type.push('2'),  // 32    
-            '3' => parsed_type.push('3'),  // 32
-            '4' => parsed_type.push('4'),  // 64      
-            '5' => parsed_type.push('5'),  // 256
-            '6' => parsed_type.push('6'),  // 16, 64
-            '7' => parsed_type.push('7'),         
-            '8' => parsed_type.push('8'),  // 128
-            '9' => parsed_type.push('9'),      
-            'i' => parsed_type.push('i'),  
-            'f' => parsed_type.push('f'),              
-            'u' => parsed_type.push('u'),     
-            's' => parsed_type.push('s'),  
-            'z' => parsed_type.push('z'),  
-            'r' => parsed_type.push('r'),    
-            't' => parsed_type.push('t'),                                                                                                                                                                                     
-            _ => {continue}
-        }
-    }
-    parsed_type
-}
-
-impl TypeToStr for TType {
-    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
-        let typestr = typestr.as_ref();
-
-        let parsed_type = sanitize_typestr(typestr);
-
-        //println!("TType - typestr sanitized: {}", &parsed_type);
-
-        let _container = CoType::from_typestr(&parsed_type);
-        if _container.is_ok() {
-            return Ok(Self::ContainerType(_container.unwrap()));
-        } 
-
-        let _const = ConstType::from_typestr(parsed_type);
-        if _const.is_ok() {
-            return Ok(Self::ConstType(_const.unwrap()));
-        }
-        Err(TypeError::Unknown(typestr.to_string()))     
-    }
-    fn get_value_wrapper(&self) -> TypeWrapper {
-        match self {
-            Self::ConstType(x) => {x.get_value_wrapper()},
-            Self::ContainerType(x) => {x.get_value_wrapper()},
-            Self::Regex => {todo!("Implement Regex")},
-        }
-    }
-    fn to_const_typestr(&self) -> String {
-        match self {
-            Self::ConstType(x) => {x.to_const_typestr()},
-            Self::ContainerType(x) => {x.to_const_typestr()},
-            Self::Regex => {todo!("Implement Regex")},
-        }
-    }
-    fn to_let_typestr(&self) -> String {
-        match self {
-            Self::ConstType(x) => {x.to_let_typestr()},
-            Self::ContainerType(x) => {x.to_let_typestr()},
-            Self::Regex => {todo!("Implement Regex")},
-        }         
-    }
-    fn to_fn_arg(&self) -> String {
-        match self {
-            Self::ConstType(x) => {x.to_fn_arg()},
-            Self::ContainerType(x) => {x.to_fn_arg()},
-            Self::Regex => {todo!("Implement Regex")},
-        }        
-    }
-    fn to_return_typestr(&self) -> String {
-        match self {
-            Self::ConstType(x) => {x.to_return_typestr()},
-            Self::ContainerType(x) => {x.to_return_typestr()},
-            Self::Regex => {todo!("Implement Regex")},
-        }             
-    }
-
-
-}
 
 #[cfg(test)]
 mod tests {
@@ -280,27 +151,7 @@ mod tests {
 
     #[test]
     fn test_from_typestr() {
-        let typestr = " Vec< &str>".to_string();
-        let ttype = TType::from_typestr(typestr).unwrap();
-        let expected = TType::ContainerType(CoType::Vector(ConstType::Char));
-        assert_eq!(ttype, expected);
 
-        let typestr = " (usize, f32, f64, u8 ) ".to_string();
-        let ttype = TType::from_typestr(typestr).unwrap();
-        let expected = TType::ContainerType(CoType::Tuple(
-            vec![
-                ConstType::Numeric(format!("usize")),
-                ConstType::Numeric(format!("f32")),
-                ConstType::Numeric(format!("f64")),
-                ConstType::Numeric(format!("u8")),
-            ]
-        ));
-        assert_eq!(ttype, expected);
-
-        let typestr = " Vec< &str> ".to_string();
-        let ttype = TType::from_typestr(typestr).unwrap().to_const_typestr();
-        let expected = "OnceLock<Vec<&str>>".to_string();
-        assert_eq!(ttype, expected);
 
     }
 }

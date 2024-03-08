@@ -33,6 +33,7 @@ pub enum ParserError {
 ///     assert_eq!(enumtable.get_name(), "MyEnumName");
 ///     let val_var1_prop2 = enumtable.get_value_by_col_row(1,0).unwrap();
 ///     assert_eq!(val_var1_prop2, "(0,3.14)");
+///     
 /// 
 /// ```
 /// 
@@ -136,7 +137,7 @@ impl ToEnumTable for TableParser {
         enumtable.set_properties(properties.into());
         // types are same as properties
         let types = &self.type_row[1..self.type_row.len()];
-        enumtable.set_types(types.into());
+        enumtable.set_types(types.into())?;
         // variants
         let variants = &self.data_cols[0];
         enumtable.set_variants(variants.to_owned());
@@ -144,6 +145,7 @@ impl ToEnumTable for TableParser {
         let values = &self.data_cols[1..self.data_cols.len()];
         enumtable.set_data(values.to_owned());
         enumtable.check_duplicates()?;
+        
 
         Ok(enumtable)
     }

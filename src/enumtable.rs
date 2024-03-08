@@ -16,7 +16,7 @@ pub enum TableError {
     DuplicateValue(String, usize, String),
 }
 
-use crate::to_code::types::{TType, TypeToStr};
+use crate::to_code::types::{RType, RTypeString};
 
 /// Gets created by the table parser
 /// 
@@ -46,7 +46,7 @@ pub struct EnumTable {
     properties: Vec<String>,
     variants: Vec<String>,
     data: Vec<Vec<String>>,
-    pub parsed_types: Vec<TType>,
+    pub parsed_types: Vec<RType>,
 }
 
 impl EnumTable {
@@ -65,12 +65,17 @@ impl EnumTable {
     pub fn set_name(&mut self, enumname: String) {
         self.enumname = enumname;
     }
-    pub fn set_types(&mut self, types: Vec<String>) {
+    /// Will parse the types and throw an error if any were unparseable
+    pub fn set_types(&mut self, types: Vec<String>) -> Result<(), Box<dyn std::error::Error>> {
         self.types = types;
+        self.parse_types()?;
+        Ok(())
     }
+    /// Properties will have the length of columns
     pub fn set_properties(&mut self, properties: Vec<String>) {
         self.properties = properties;
     }
+    /// Variants will have the length of rows
     pub fn set_variants(&mut self, variants: Vec<String>) {
         self.variants = variants;
     }
@@ -93,7 +98,7 @@ impl EnumTable {
     pub fn parse_types(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let mut parsed_types = vec![];
         for type_str in &self.types {
-            let ttype = TType::from_typestr(type_str)?;
+            let ttype = RType::from_typestr(type_str)?;
             parsed_types.push(ttype);
         }
         self.parsed_types = parsed_types;
