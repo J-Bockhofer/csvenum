@@ -1,5 +1,5 @@
 
-use super::{TypeError, RTypeString};
+use super::{TypeError, RTypeTrait};
 
 /// each type will have two things in their tuple (last two entries) first: bool isReference, second: String specified lifetime... i want to leave that for later aarrgh
 #[allow(non_camel_case_types)]
@@ -78,7 +78,7 @@ pub fn stringtype_from_typestr(typestr: &'static str) -> Option<StringType> {
     }
 }
 
-impl RTypeString for StringType {
+impl RTypeTrait for StringType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
         let typestr = typestr.as_ref();
         match typestr {

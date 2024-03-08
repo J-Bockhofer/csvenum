@@ -1,4 +1,4 @@
-use super::{RTypeString, TypeError};
+use super::{RTypeTrait, TypeError};
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Eq, PartialEq)]
@@ -139,7 +139,7 @@ pub fn numeric_from_typestr(typestr: &str) -> Option<NumericType> {
     }
 }
 
-impl RTypeString for NumericType {
+impl RTypeTrait for NumericType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
         let typestr = typestr.as_ref();
         match typestr {

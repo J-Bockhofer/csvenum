@@ -27,7 +27,7 @@ pub enum ParserError {
 ///         "Variant2,      medium,     (0$9.82),       B",
 ///     ];
 /// 
-///     let table_parser = TableParser::from_csv_lines(rows);
+///     let table_parser = TableParser::from_csv_lines(rows, "$");
 ///     assert!(table_parser.is_ok());
 ///     let enumtable = table_parser.unwrap().to_enumtable().unwrap();
 ///     assert_eq!(enumtable.get_name(), "MyEnumName");
@@ -79,7 +79,7 @@ impl TableParser {
     fn set_data_rows(&mut self, cols: Vec<Vec<String>>) {
         self.data_cols = cols;
     }
-    pub fn from_csv_lines<T: AsRef<str>>(lines: Vec<T>)-> Result<Self, ParserError> {
+    pub fn from_csv_lines<T: AsRef<str>>(lines: Vec<T>, value_separator: &str)-> Result<Self, ParserError> {
         let mut this = TableParser::new();
         let type_row_idx = this.type_row_idx;
         let prop_row_idx = type_row_idx + 1;
@@ -88,10 +88,10 @@ impl TableParser {
         let num_lines = lines.len();
         if lines.is_empty() || num_lines < 3 {return Err(ParserError::TableEmptyOrShort)}
 
-        let type_row: Vec<String> = lines[type_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string() }).collect();
+        let type_row: Vec<String> = lines[type_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string() }).collect();
         //match type_row[0] {} == "TYPES".to_string()
 
-        let prop_row: Vec<String> = lines[prop_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string()}).collect();
+        let prop_row: Vec<String> = lines[prop_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
         let num_cols = type_row.len();
 
         if num_cols != prop_row.len() {return Err(ParserError::TableHeaderMismatch(num_cols, prop_row.len()))}
@@ -104,7 +104,7 @@ impl TableParser {
         }
         for row in dat_row_idx..num_lines {
             if lines[row].as_ref().is_empty() {continue}
-            let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace("$", ",").trim().to_string()}).collect();
+            let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
             if line.len() != num_cols {return Err(ParserError::TableDataMismatch(num_cols, line.len(), row))}
             for col in 0..num_cols {
                 data[col].push(line[col].clone());

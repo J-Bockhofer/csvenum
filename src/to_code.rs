@@ -10,7 +10,8 @@ pub use constblock::format_consts;
 pub mod funcblock;
 //pub use funcblock::format_fn_as_property;
 
-pub mod types;
+//pub mod types;
+//pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType};
 
 pub mod codeblocks;
 

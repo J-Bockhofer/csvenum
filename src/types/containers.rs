@@ -1,4 +1,4 @@
-use super::{RType, RTypeString, TypeError};
+use super::{RType, RTypeTrait, TypeError};
 use regex::Regex;
 use std::sync::OnceLock;
 
@@ -29,7 +29,7 @@ pub enum ContainerType {
 
 }
 
-impl RTypeString for ContainerType {
+impl RTypeTrait for ContainerType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
         let typestr = typestr.as_ref();
         let vec_re = VECTOR_REGEX.get_or_init(|| Regex::new(VECTOR_REGEX_STR).unwrap());
@@ -69,7 +69,7 @@ impl RTypeString for ContainerType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::to_code::types::{NumericType, StringType, SpecialType};
+    use crate::{NumericType, StringType, SpecialType};
 
     #[test]
     fn test_parse_container_type() { 

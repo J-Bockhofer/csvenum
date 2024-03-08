@@ -16,7 +16,7 @@ pub enum TableError {
     DuplicateValue(String, usize, String),
 }
 
-use crate::to_code::types::{RType, RTypeString};
+use crate::{RType, RTypeTrait};
 
 /// Gets created by the table parser
 /// 
@@ -32,7 +32,7 @@ use crate::to_code::types::{RType, RTypeString};
 ///         "Variant2,      medium,     (0$9.82),       B",
 ///     ];
 /// 
-///     let table_parser = TableParser::from_csv_lines(rows).unwrap();
+///     let table_parser = TableParser::from_csv_lines(rows, "$").unwrap();
 ///     let enumtable = table_parser.to_enumtable().unwrap();
 ///     assert_eq!(enumtable.get_col_of_property("Property1"), Some(0));
 /// 
@@ -137,3 +137,4 @@ impl EnumTable {
         Ok(self.get_value_by_col_row(col_idx, row_idx)?)
     }
 }
+

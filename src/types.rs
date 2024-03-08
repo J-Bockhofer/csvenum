@@ -1,7 +1,41 @@
+///! Convert Types passed as a string to more useful representations for code gen.
+///! Allows for specifying "&str" in a textfile to generate associated representations in function signatures and expressions. 
+///!
+pub mod numeric;
+pub use numeric::NumericType;
 
-use super::*;
+pub mod stringtype;
+pub use stringtype::StringType;
 
-use super::containers::{VECTOR_REGEX, VECTOR_REGEX_STR};
+pub mod containers;
+pub use containers::ContainerType;
+
+pub mod special;
+pub use special::SpecialType;
+
+
+use thiserror::Error as Error;
+
+
+use std::sync::OnceLock;
+use regex::Regex;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum TypeError {
+
+    #[error("A string that should represent a valid type could not get parsed -> {0} ")]
+    Unknown(String),
+    #[error("A string that should represent a valid String type could not get parsed -> {0} ")]
+    StringTypeUnknown(String),
+    #[error("A string that should represent a valid Numeric type could not get parsed -> {0} ")]
+    NumericTypeUnknown(String),
+    #[error("A string that should represent a valid Container type could not get parsed -> {0} ")]
+    ContainerTypeUnknown(String),
+    #[error("A string that should represent a valid type could not get parsed -> {0} ")]
+    RTypeUnknown(String),
+
+
+}
 
 
 /// Here come some regex:
@@ -27,9 +61,8 @@ const NUMERIC_REGEX_STR: &'static str = r"(\b^[uif](?:size|[0-9]{0,3})+\b)";
 static NUMERIC_REGEX: OnceLock<Regex> = OnceLock::new();
 
 
-/// Okay this is disgusting but since all of our 
 
-/// Rust Type primitive (no value or name attached), has functions for:
+/// Rust Type primitive (no value or name attached, except for enum), has functions for:
 /// 
 /// - constructing itself from a given string
 /// 
@@ -55,7 +88,7 @@ pub enum RType {
     Special(SpecialType),
 }
 
-impl RTypeString for RType {
+impl RTypeTrait for RType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
         let typestr = typestr.as_ref();
     // first we need to look if one of our regex matches
@@ -78,37 +111,26 @@ impl RTypeString for RType {
     } 
     // then regex not impl yet
 
-    // then string
+    // then string - could just be is match
     if let Some(captures) = string_re.captures(&typestr) { 
         let typestr = captures.get(1).unwrap().as_str();
         return Ok(RType::String(StringType::from_typestr(typestr)?));
     }
-
-    // then numeric
+    // then numeric - could just be is match
     if let Some(captures) = numeric_re.captures(&typestr) { 
         let typestr = captures.get(1).unwrap().as_str();
         return Ok(RType::Numeric(NumericType::from_typestr(typestr)?));
     }
-
-    //ContainerType::from_typestr(&typestr)?;
     // then container
     if let Ok(container) = ContainerType::from_typestr(&typestr) {
         return Ok(RType::Container(container));
     }
-
-
-    // find if reference or lifetime beofre doing anything else no each type will have to decide for itself... unsolved f it
-
-
+    // find if reference or lifetime before doing anything else.. no each type will have to decide for itself... unsolved f it
     Err(TypeError::RTypeUnknown(typestr))
-
-
-
-
     }
 }
 
-pub trait RTypeString {
+pub trait RTypeTrait {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;    
 }
 
@@ -160,6 +182,19 @@ mod tests {
         ]));
         assert_eq!(result, expected);
 
+        let typestr = "Vec<Vec<(usize, CStr)>>".to_string();
+        let result = RType::from_typestr(&typestr).unwrap();
+        let expected = RType::Container(ContainerType::Vector(Box::new(
+            RType::Container(ContainerType::Vector(Box::new(
+                RType::Container(ContainerType::Tuple(vec![
+                    Box::new(RType::Numeric(NumericType::usize)),
+                    Box::new(RType::String(StringType::CStr)),
+                ]))
+            )))
+        )));
+        assert_eq!(result, expected);
+
     }
 
 }
+

@@ -21,11 +21,11 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 3. impl wrapper for pure/movable functions
 
-4. property type: Vec -> checking for duplicate values in table?
+4. property type: Vec -> checking for duplicate values in table? [x]
 
-5. property type: Fixed array
+5. property type: Fixed array [x]
 
-5. Check duplicate values in consts ... are okay no? it only depends on what you call the function with, if country has 108 Citizens and 108m² it is the same value but the meaning is different depending on context/ property name ... yes but if its the same property dingus lol
+5. Check duplicate values in consts ... are okay no? it only depends on what you call the function with, if country has 108 Citizens and 108m² it is the same value but the meaning is different depending on context/ property name ... yes but if its the same property dingus lol [x]
 
 6. Const property type: Regex, make r'' itself be a const &str that will then get passed to the regex constructor in the OnceLock (also need to cargo add regex, use regex::Regex)
 
@@ -33,7 +33,7 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 8. impl Ord, Eq
 
-9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways
+9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways [x]
 
 10. impl std::fmt::Display on the enum
 

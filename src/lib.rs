@@ -1,16 +1,6 @@
 use std::io::Write;
-/// Property will be converted to: 
-/// - Two functions:
-/// 
-///     as_(name) -> Enum
-/// 
-///     from_(name) -> (type_str)
-/// 
-/// 
-/// - One Constant per Variant
-/// 
-///     const (VARIANT)_(NAME): (type_str)
-pub mod properties;
+
+//pub mod properties;
 
 extern crate regex;
 
@@ -22,10 +12,26 @@ pub mod parser;
 
 pub mod enumtable;
 
-pub mod variants;
+pub mod code_gen;
+
+pub mod types;
+pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType};
+
+
+//pub mod variants;
 
 //use variants::Variant;
-
+/// Property will be converted to: 
+/// - Two functions:
+/// 
+///     as_(name) -> Enum
+/// 
+///     from_(name) -> (type_str)
+/// 
+/// 
+/// - One Constant per Variant
+/// 
+///     const (VARIANT)_(NAME): (type_str)
 pub mod table;
 pub use table::EnumTable;
 
@@ -76,25 +82,6 @@ impl Document {
 }
 
 
-pub struct EnumModule {
-    pub rootdir: String,
-
-    // Used Variants, Properties, Types and Values
-
-
-    // Imports
-
-    // EnumBlock
-
-    // A number of ConstBlocks (per property)
-
-    // Two functions (as & from) per property
-
-    // A config (indenting, split files, functions as impl for Enum)
-
-    // 
-
-}
 
 /// Main struct that will be called with the csv file
 pub struct Enumdotrs {
@@ -104,7 +91,7 @@ pub struct Enumdotrs {
 
 
 pub fn generate_from_csv_to_file() {
-    
+
     let lines = read_file_lines("tests/pisse.csv").unwrap();
 
     let et = EnumTable::from_csv_lines(lines).unwrap();
