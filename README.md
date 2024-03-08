@@ -1,4 +1,6 @@
 # table2enum
+csvenum? 
+
 
 ## WHat problem is this solving?
 

@@ -21,16 +21,28 @@ use type_const::ConstType;
 pub mod type_container;
 use type_container::ContainerType as CoType;
 
-
+pub mod rtype;
+pub use rtype::{RType, RTypeString};
 
 use thiserror::Error as Error;
 
+
+use std::sync::OnceLock;
+use regex::Regex;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum TypeError {
 
     #[error("A string that should represent a valid type could not get parsed -> {0} ")]
     Unknown(String),
+    #[error("A string that should represent a valid String type could not get parsed -> {0} ")]
+    StringTypeUnknown(String),
+    #[error("A string that should represent a valid Numeric type could not get parsed -> {0} ")]
+    NumericTypeUnknown(String),
+    #[error("A string that should represent a valid Container type could not get parsed -> {0} ")]
+    ContainerTypeUnknown(String),
+    #[error("A string that should represent a valid type could not get parsed -> {0} ")]
+    RTypeUnknown(String),
 
     #[error("Parsed table needs to have at least 3 lines.")]
     ConstTError,
@@ -42,39 +54,33 @@ pub enum TypeError {
 
 }
 
-
-/// Rust Type primitive (no value or name attached), has functions for:
-/// 
-/// - constructing itself from a given string
-/// 
-/// - format to different representations type in fn arg, return value, const/static, 
-/// 
-/// Excludes:
-/// Result
-/// Option
-/// Error
-pub enum RType {
-    /// Any Numeric Type
-    Numeric(NumericType),
-    /// Any String Type
-    String(StringType),
-    /// Any Container Type, except for Option and Result
-    Container(ContainerType), //Box<RType> Type of Container with Box<RType>
-    /// Special Types that need special treatment, very special incl:
-    /// 
-    /// Regex
-    /// 
-    /// Enum ( tuple of enum?? )
-    Special(SpecialType),
-
-}
-
-
+/// Only Modifier for parsed type not for types in code. - not used...
 pub struct TypeModifier {
     pub is_reference: bool,
-    pub lifeftime: String,
+    pub lifetime: String,
 }
 
+impl TypeModifier {
+    pub fn new() -> Self {
+        TypeModifier { is_reference: false, lifetime: String::new() }
+    }
+    pub fn as_tuple(&self) -> (bool, &str) {
+        return (self.is_reference, &self.lifetime)
+    }
+    pub fn is_empty(&self) -> bool {
+        if !self.is_reference && self.lifetime.is_empty() {return true}
+        false
+    }
+    pub fn with_reference() -> Self {
+        TypeModifier { is_reference: true, lifetime: String::new() }
+    }
+    pub fn with_lifetime(lifetime: &str) -> Self {
+        TypeModifier { is_reference: false, lifetime: lifetime.to_string() }
+    }    
+    pub fn with(is_reference: bool, lifetime: &str) -> Self {
+        TypeModifier { is_reference, lifetime: lifetime.to_string() }
+    }
+}
 
 /// We take in text like this: 
 /// ```
@@ -102,6 +108,8 @@ pub trait TypeToStr {
     //fn declare_value<T: AsRef<str>>(&self, value: T) -> String;
 
 }
+
+
 
 
 /// Helper for wrapping values in the given type

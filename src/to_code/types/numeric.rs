@@ -1,6 +1,7 @@
-
+use super::{RTypeString, TypeError};
 
 #[allow(non_camel_case_types)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum NumericType {
     /// i8
     /// 
@@ -135,5 +136,27 @@ pub fn numeric_from_typestr(typestr: &str) -> Option<NumericType> {
         ISIZE_TYPESTR => Some(NumericType::isize),
         USIZE_TYPESTR => Some(NumericType::usize),
         _ => Option::None,
+    }
+}
+
+impl RTypeString for NumericType {
+    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
+        let typestr = typestr.as_ref();
+        match typestr {
+            I8_TYPESTR => Ok(NumericType::i8),
+            I16_TYPESTR => Ok(NumericType::i16),
+            I32_TYPESTR => Ok(NumericType::i32),
+            I64_TYPESTR => Ok(NumericType::i64),
+            U8_TYPESTR => Ok(NumericType::u8),
+            U16_TYPESTR => Ok(NumericType::u16),
+            U32_TYPESTR => Ok(NumericType::u32),
+            U64_TYPESTR => Ok(NumericType::u64),
+            U128_TYPESTR => Ok(NumericType::u128),
+            F32_TYPESTR => Ok(NumericType::f32),
+            F64_TYPESTR => Ok(NumericType::f64),
+            ISIZE_TYPESTR => Ok(NumericType::isize),
+            USIZE_TYPESTR => Ok(NumericType::usize),
+            _ => Err(TypeError::NumericTypeUnknown(typestr.to_string())),
+        }        
     }
 }
