@@ -55,28 +55,6 @@ const OSSTR_TYPESTR: &'static str = "OsStr";
 const CSTRING_TYPESTR: &'static str = "CString";
 const CSTR_TYPESTR: &'static str = "CStr";
 
-/// this isnt the real interface anyways
-pub fn stringtype_as_typestr(stringtype: &StringType) -> &str {
-    match stringtype {
-        StringType::str => STR_TYPESTR,
-        StringType::String => STRING_TYPESTR,
-        StringType::OsString => OSSTRING_TYPESTR,
-        StringType::OsStr => OSSTR_TYPESTR,
-        StringType::CString => CSTRING_TYPESTR,
-        StringType::CStr => CSTR_TYPESTR,
-    }
-}
-pub fn stringtype_from_typestr(typestr: &'static str) -> Option<StringType> {
-    match typestr {
-        STR_TYPESTR => Some(StringType::str),
-        STRING_TYPESTR => Some(StringType::String),
-        OSSTRING_TYPESTR => Some(StringType::OsString),
-        OSSTR_TYPESTR => Some(StringType::OsStr),
-        CSTRING_TYPESTR => Some(StringType::CString),
-        CSTR_TYPESTR => Some(StringType::CStr),
-        _ => Option::None,
-    }
-}
 
 impl RTypeTrait for StringType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
@@ -90,6 +68,26 @@ impl RTypeTrait for StringType {
             CSTR_TYPESTR => Ok(StringType::CStr),
             _ => Err(TypeError::StringTypeUnknown(typestr.to_string())),
         }        
+    }
+    fn to_typestr(&self) -> String {
+        String::new() + match self 
+        {
+            StringType::str => STR_TYPESTR,
+            StringType::String => STRING_TYPESTR,
+            StringType::OsString => OSSTRING_TYPESTR,
+            StringType::OsStr => OSSTR_TYPESTR,
+            StringType::CString => CSTRING_TYPESTR,
+            StringType::CStr => CSTR_TYPESTR,
+        }
+    }
+    fn to_typestr_no_ref(&self) -> String {
+        self.to_typestr()
+    }
+    fn to_typestr_no_life(&self) -> String {
+        self.to_typestr()
+    }
+    fn collect_lifetimes(&self, into: &mut Vec<String>) {
+        // We dont have any life times here
     }
 }
 

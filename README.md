@@ -15,6 +15,10 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 ## Todos
 
+-1. Need to deal with trailing commas in csv
+
+0. BTrees and HashMaps
+
 1. descriptions for columns
 
 2. print to console
@@ -33,7 +37,7 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 8. impl Ord, Eq
 
-9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways [x]
+9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways [x] + ref and lifetime :)
 
 10. impl std::fmt::Display on the enum
 

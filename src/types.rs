@@ -17,7 +17,7 @@ pub use special::SpecialType;
 use thiserror::Error as Error;
 
 
-use std::sync::OnceLock;
+use std::{sync::OnceLock, fmt::Debug};
 use regex::Regex;
 
 #[derive(Error, Debug, PartialEq)]
@@ -35,7 +35,8 @@ pub enum TypeError {
     RTypeUnknown(String),
     #[error("Found reference but no type -> {0} ")]
     EmptyTypeWithReference(String),
-
+    #[error("CALLED SPECIAL.from_typestr with is invalid. Should not parse itself.")]
+    SPECIALTYPEPARSE,
 
 
 
@@ -95,6 +96,41 @@ pub enum RType {
     Special(Reference, SpecialType),
 }
 
+impl RType {
+    pub fn get_refstr(&self) -> String {
+        match self {
+            RType::Special(x, _) => {x.to_refstr()},
+            RType::String(x, _) => {x.to_refstr()},
+            RType::Numeric(x, _) => {x.to_refstr()},
+            RType::Container(x, _) => {x.to_refstr()},
+        }
+    }
+    pub fn get_refstr_no_life(&self) -> String {
+        match self {
+            RType::Special(x, _) => {x.to_refstr_no_life()},
+            RType::String(x, _) => {x.to_refstr_no_life()},
+            RType::Numeric(x, _) => {x.to_refstr_no_life()},
+            RType::Container(x, _) => {x.to_refstr_no_life()},
+        }        
+    }
+    pub fn get_lifetime(&self) -> String {
+        match self {
+            RType::Special(x, _) => {x.get_lifetime()},
+            RType::String(x, _) => {x.get_lifetime()},
+            RType::Numeric(x, _) => {x.get_lifetime()},
+            RType::Container(x, _) => {x.get_lifetime()},            
+        }
+    }
+    pub fn has_lifetime(&self) -> bool {
+        match self {
+            RType::Special(x, _) => {x.has_lifetime()},
+            RType::String(x, _) => {x.has_lifetime()},
+            RType::Numeric(x, _) => {x.has_lifetime()},
+            RType::Container(x, _) => {x.has_lifetime()},            
+        }        
+    }
+}
+
 impl RTypeTrait for RType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
         let mut typestr = typestr.as_ref(); // may be changed when a lifetime is obtained.
@@ -148,10 +184,80 @@ impl RTypeTrait for RType {
         // find if reference or lifetime before doing anything else.. no each type will have to decide for itself... unsolved f it
         Err(TypeError::RTypeUnknown(typestr.to_string()))
     }
+
+    
+    fn to_typestr(&self) -> String{
+        let lifetime_pd = if self.has_lifetime() {" "} else {""}; 
+
+        self.get_refstr() + lifetime_pd + &match self {
+            RType::Special(_, x) => {x.to_typestr()},
+            RType::Numeric(_, x) => {x.to_typestr()},
+            RType::String(_, x) => {x.to_typestr()},
+            RType::Container(_, x) => {x.to_typestr()},
+        }
+    }
+    fn to_typestr_no_ref(&self) -> String {
+        match self {
+            RType::Special(_, x) => {x.to_typestr_no_ref()},
+            RType::Numeric(_, x) => {x.to_typestr_no_ref()},
+            RType::String(_, x) => {x.to_typestr_no_ref()},
+            RType::Container(_, x) => {x.to_typestr_no_ref()},
+        }        
+    }
+    fn to_typestr_no_life(&self) -> String {
+        self.get_refstr_no_life() + &match self {
+            RType::Special(_, x) => {x.to_typestr_no_life()},
+            RType::Numeric(_, x) => {x.to_typestr_no_life()},
+            RType::String(_, x) => {x.to_typestr_no_life()},
+            RType::Container(_, x) => {x.to_typestr_no_life()},
+        }
+    }
+    fn collect_lifetimes(&self, into: &mut Vec<String>) {
+        into.push(self.get_lifetime());
+        match self {
+            RType::Special(_, x) => {x.collect_lifetimes(into)},
+            RType::Numeric(_, x) => {x.collect_lifetimes(into)},
+            RType::String(_, x) => {x.collect_lifetimes(into)},
+            RType::Container(_, x) => {x.collect_lifetimes(into)},
+        }
+    }
+
+
 }
 
 pub trait RTypeTrait {
-    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;    
+    fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;
+    
+    /// Conversions into type representation
+    /// 
+    /// Example input: `&'a str`
+    /// 
+    /// 1. get normal representation `&'a str`
+    fn to_typestr(&self) -> String;
+    /// 2. get representation without references or lifetimes `str`
+    fn to_typestr_no_ref(&self) -> String;
+    /// 3. get representation without lifetime `&str`
+    fn to_typestr_no_life(&self) -> String;
+    /// 4. collect lifetimes
+    fn collect_lifetimes(&self, into: &mut Vec<String>);
+
+    // Declarations... TypeWrapper ? as Vector again? vector and tuple declaration in text as [value1, value2, value3] with vec! for vectors.
+    
+
+    // we need:
+    
+    // without lifetime &str
+    // without reference
+    // const implementation (enum again?) -> const static oncelock hashmap?!
+
+    // what we want to represent
+    // const declaration
+    // normal let
+    // let when const is declared
+    // match self?! -> is self match in regex - is_match(haystack: &str) -> Self match haystack {haystack if enum_re.is_match() => {}, etc..}
+    // fn signature, return and argument ... lifetimes...
+
+
 }
 
 
@@ -167,14 +273,42 @@ pub enum Reference {
     None,
 }
 
-/* impl Reference {
-    pub fn empty() -> Self {
-        Reference::None
+impl std::fmt::Display for Reference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let refstr = match self {
+            Reference::None => {"".to_string()},
+            Reference::Naked => {"&".to_string()},
+            Reference::WithLifetime(x) => {format!("&{}",x)},
+        };
+        write!(f, "{}", refstr)
     }
-    pub fn with_lifetime(lifetime: &str) -> Self {
-        Reference::WithLifetime(lifetime.to_string())
-    }    
-} */
+}
+
+impl Reference {
+    pub fn to_refstr(&self) -> String {
+        self.to_string()
+    }
+    pub fn get_lifetime(&self) -> String {
+        match self {
+            Self::WithLifetime(x) => {x.to_owned()}
+            _ => {String::new()},
+        }
+    }
+    pub fn has_lifetime(&self) -> bool {
+        match self {
+            Self::WithLifetime(_) => {true}
+            _ => {false},
+        }        
+    }
+    pub fn to_refstr_no_life(&self) -> String {
+        match self {
+            Self::None => {String::new()},
+            _ => {String::from("&")},
+
+        }
+    }
+
+}
 
 
 
@@ -242,6 +376,31 @@ mod tests {
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::Container(Reference::None, ContainerType::Vector(Box::new(RType::String(Reference::WithLifetime("'a".to_string()), StringType::str))));
         assert_eq!(result, expected);
+
+        let typestr = "Vec<&'a str>".to_string();
+        let result = RType::from_typestr(&typestr).unwrap();
+        let expected = result.to_typestr();
+        assert_eq!(typestr, expected);
+
+        let typestr = "(Vec<&str>, usize)".to_string();
+        let result = RType::from_typestr(&typestr).unwrap();
+        let expected = result.to_typestr();
+        assert_eq!(typestr, expected);        
+
+        let typestr = "(Vec<Vec<&'a str>>, usize)".to_string();
+        let result = RType::from_typestr(&typestr).unwrap();
+        let expected = result.to_typestr();
+        assert_eq!(typestr, expected);
+
+
+/*         let typestr = "(Vec<&'a str>, &'b OsStr, [&'a usize, 3])".to_string();
+        let result = RType::from_typestr(&typestr).unwrap();
+        let expected = result.to_typestr();
+        assert_eq!(typestr, expected);
+        let mut into: Vec<String> = vec![];
+        result.collect_lifetimes(&mut into);
+        let expected = vec!["'a","'b","'a"];
+        assert_eq!(into, expected); */
 
     }
 

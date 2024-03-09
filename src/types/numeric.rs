@@ -102,42 +102,6 @@ const F32_TYPESTR: &'static str = "f32";
 const F64_TYPESTR: &'static str = "f64";
 const ISIZE_TYPESTR: &'static str = "isize";
 const USIZE_TYPESTR: &'static str = "usize";
- 
-pub fn numeric_as_typestr(numeric: &NumericType) -> &str {
-    match numeric {
-        NumericType::i8 => I8_TYPESTR,
-        NumericType::i16 => I16_TYPESTR,
-        NumericType::i32 => I32_TYPESTR,
-        NumericType::i64 => I64_TYPESTR,
-        NumericType::u8 => U8_TYPESTR,
-        NumericType::u16 => U16_TYPESTR,
-        NumericType::u32 => U32_TYPESTR,
-        NumericType::u64 => U64_TYPESTR,
-        NumericType::u128 => U128_TYPESTR,
-        NumericType::f32 => F32_TYPESTR,
-        NumericType::f64 => F64_TYPESTR,
-        NumericType::isize => ISIZE_TYPESTR,
-        NumericType::usize => USIZE_TYPESTR,
-    }
-}
-pub fn numeric_from_typestr(typestr: &str) -> Option<NumericType> {
-    match typestr {
-        I8_TYPESTR => Some(NumericType::i8),
-        I16_TYPESTR => Some(NumericType::i16),
-        I32_TYPESTR => Some(NumericType::i32),
-        I64_TYPESTR => Some(NumericType::i64),
-        U8_TYPESTR => Some(NumericType::u8),
-        U16_TYPESTR => Some(NumericType::u16),
-        U32_TYPESTR => Some(NumericType::u32),
-        U64_TYPESTR => Some(NumericType::u64),
-        U128_TYPESTR => Some(NumericType::u128),
-        F32_TYPESTR => Some(NumericType::f32),
-        F64_TYPESTR => Some(NumericType::f64),
-        ISIZE_TYPESTR => Some(NumericType::isize),
-        USIZE_TYPESTR => Some(NumericType::usize),
-        _ => Option::None,
-    }
-}
 
 impl RTypeTrait for NumericType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
@@ -158,5 +122,33 @@ impl RTypeTrait for NumericType {
             USIZE_TYPESTR => Ok(NumericType::usize),
             _ => Err(TypeError::NumericTypeUnknown(typestr.to_string())),
         }        
+    }
+    fn to_typestr(&self) -> String {
+        String::new() + match self 
+        {
+            NumericType::i8 => I8_TYPESTR,
+            NumericType::i16 => I16_TYPESTR,
+            NumericType::i32 => I32_TYPESTR,
+            NumericType::i64 => I64_TYPESTR,
+            NumericType::u8 => U8_TYPESTR,
+            NumericType::u16 => U16_TYPESTR,
+            NumericType::u32 => U32_TYPESTR,
+            NumericType::u64 => U64_TYPESTR,
+            NumericType::u128 => U128_TYPESTR,
+            NumericType::f32 => F32_TYPESTR,
+            NumericType::f64 => F64_TYPESTR,
+            NumericType::isize => ISIZE_TYPESTR,
+            NumericType::usize => USIZE_TYPESTR,
+        }
+
+    }
+    fn to_typestr_no_ref(&self) -> String {
+        self.to_typestr()
+    }
+    fn to_typestr_no_life(&self) -> String {
+        self.to_typestr()
+    }
+    fn collect_lifetimes(&self, into: &mut Vec<String>) {
+        // We dont have any life times here
     }
 }
