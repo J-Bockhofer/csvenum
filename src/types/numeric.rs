@@ -1,5 +1,15 @@
 use super::{RTypeTrait, TypeError};
 
+use std::sync::OnceLock;
+use regex::Regex;
+
+
+const NUMERIC_REGEX_STR: &'static str = r"^ ?(\d*)$"; 
+static NUMERIC_REGEX: OnceLock<Regex> = OnceLock::new();
+
+const FLOAT_REGEX_STR: &'static str = r"^ ?([\d\.]*)$"; 
+static FLOAT_REGEX: OnceLock<Regex> = OnceLock::new();
+
 #[allow(non_camel_case_types)]
 #[derive(Debug, Eq, PartialEq)]
 pub enum NumericType {
@@ -150,5 +160,23 @@ impl RTypeTrait for NumericType {
     }
     fn collect_lifetimes(&self, into: &mut Vec<String>) {
         // We dont have any life times here
+    }
+    fn is_const(&self) -> bool {
+        true        
+    }
+    fn value_is_valid(&self, valuestr: &str) -> bool {
+        let num_re = NUMERIC_REGEX.get_or_init(|| Regex::new(NUMERIC_REGEX_STR).unwrap());
+        let float_re = FLOAT_REGEX.get_or_init(|| Regex::new(FLOAT_REGEX_STR).unwrap());
+        match self {
+            NumericType::f32 | NumericType::f64 => {if float_re.is_match(valuestr) {true} else {false}},
+            _ => {if num_re.is_match(valuestr) {true} else {false}}
+        }
+        
+    }
+    fn get_depth(&self, counter: usize) -> usize {
+        counter + 0
+    }
+    fn get_breadth(&self, counter: usize) -> usize {
+        counter + 0
     }
 }

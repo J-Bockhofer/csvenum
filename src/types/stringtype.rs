@@ -89,6 +89,29 @@ impl RTypeTrait for StringType {
     fn collect_lifetimes(&self, into: &mut Vec<String>) {
         // We dont have any life times here
     }
+    /// for the enum table we cast every string based type down to a const static str for easy reference and initialize from that.
+    /// 
+    /// we kinda only need this handle for container types tuple and array that may be const if all contained entries are const
+    /// 
+    /// str can be declared as const but with a static lifetime
+    /// 
+    /// 
+    fn is_const(&self) -> bool {
+        match self 
+        {
+            StringType::str => true,
+            _ => {false},
+        }        
+    }
+    fn value_is_valid(&self, valuestr: &str) -> bool {
+        true // lol
+    }
+    fn get_depth(&self, counter: usize) -> usize {
+        counter + 0
+    }
+    fn get_breadth(&self, counter: usize) -> usize {
+        counter + 0
+    }
 }
 
 

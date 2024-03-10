@@ -37,11 +37,11 @@ pub enum TypeError {
     EmptyTypeWithReference(String),
     #[error("CALLED SPECIAL.from_typestr with is invalid. Should not parse itself.")]
     SPECIALTYPEPARSE,
-
+    #[error("Invalid variant name -> {0} ")]
+    EnumValueError(String),
 
 
 }
-
 
 
 /// Here come some regex:
@@ -54,7 +54,7 @@ pub enum TypeError {
 /// `enum: MyEnum`
 /// 
 /// This regex will capture the name `MyEnum`.
-const ENUM_REGEX_STR: &'static str = r"^enum: ?([a-zA-z_]+[0-9a-zA-z_]*)"; 
+const ENUM_REGEX_STR: &'static str = r"^enum: ?([a-zA-z]+[0-9a-zA-z_]*)"; 
 static ENUM_REGEX: OnceLock<Regex> = OnceLock::new();
 
 
@@ -185,7 +185,12 @@ impl RTypeTrait for RType {
         Err(TypeError::RTypeUnknown(typestr.to_string()))
     }
 
-    
+/*     fn from_valuestr<T: AsRef<str>>(valuestr: T) -> Result<Self, TypeError> where Self: Sized {
+        let mut valuestr = valuestr.as_ref();
+        
+        if let Some(specialtype) = SpecialType::from_valuestr(valuestr) {return Self::Special(Reference::None, specialtype)}
+    } */
+
     fn to_typestr(&self) -> String{
         let lifetime_pd = if self.has_lifetime() {" "} else {""}; 
 
@@ -221,13 +226,54 @@ impl RTypeTrait for RType {
             RType::Container(_, x) => {x.collect_lifetimes(into)},
         }
     }
-
+    /// Container of type tuple will not be const when it contains non-const types
+    fn is_const(&self) -> bool {
+        match self {
+            RType::Special(_, x) => {x.is_const()},
+            RType::Numeric(_, x) => {x.is_const()},
+            RType::String(_, x) => {x.is_const()},
+            RType::Container(_, x) => {x.is_const()},
+        }        
+    }
+    fn value_is_valid(&self, valuestr: &str) -> bool {
+        match self {
+            RType::Special(_, x) => {x.value_is_valid(valuestr)},
+            RType::Numeric(_, x) => {x.value_is_valid(valuestr)},
+            RType::String(_, x) => {x.value_is_valid(valuestr)},
+            RType::Container(_, x) => {x.value_is_valid(valuestr)},
+        }        
+    }
+    fn get_depth(&self, counter: usize) -> usize {
+        match self {
+            RType::Special(_, x) => {x.get_depth(counter)},
+            RType::Numeric(_, x) => {x.get_depth(counter)},
+            RType::String(_, x) => {x.get_depth(counter)},
+            RType::Container(_, x) => {x.get_depth(counter)},
+        }           
+    }
+    fn get_breadth(&self, counter: usize) -> usize {
+        match self {
+            RType::Special(_, x) => {x.get_breadth(counter)},
+            RType::Numeric(_, x) => {x.get_breadth(counter)},
+            RType::String(_, x) => {x.get_breadth(counter)},
+            RType::Container(_, x) => {x.get_breadth(counter)},
+        }          
+    }
 
 }
 
 pub trait RTypeTrait {
+    /// Construct the RType from a string that contains type information i.e. " &str " 
+    /// 
+    /// -> will return RType::String(Reference::Naked, StringType::str)
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;
-    
+    /// Construct RType from value representation i.e. "[[3,3],[3,3],[3,3]]" and self as the type hint bc this is getting messy
+    /// 
+    /// -> will return RType::Container(Reference::None, ContainerType::Array( 
+    ///             Box::new(RType::Container(Reference::None, ContainerType::Array(
+    ///                 Box::new(RType::Numeric(NumericType::usize)), 2)
+    ///             ), 3))
+    /// fn new_from_valuestr<T: AsRef<str>>(&self, valuestr: T) -> Result<Self, TypeError> where Self: Sized;
     /// Conversions into type representation
     /// 
     /// Example input: `&'a str`
@@ -240,9 +286,34 @@ pub trait RTypeTrait {
     fn to_typestr_no_life(&self) -> String;
     /// 4. collect lifetimes
     fn collect_lifetimes(&self, into: &mut Vec<String>);
+    // to typestr const?
+    /// Get nesting depth
+    /// String = depth 0
+    /// Vec<String> = depth 1
+    /// Vec<Vec<String>> = depth 2
+    /// [String; 3] = depth 1
+    /// [[String; 3]; 3] = depth 2
+    /// (usize, usize) = depth 1
+    /// (Vec<Vec<String>>, [String; 3]) = depth 3
+    fn get_depth(&self, counter: usize) -> usize;
+    /// Get nesting breadth - only for tuple breadth
+    /// String = breadth 0
+    /// Vec<String> = breadth ? 0 String
+    /// Vec<Vec<String>> = breadth ? 0 Vec<String>
+    /// [String; 3] = breadth 0
+    /// [[String; 3]; 3] = breadth 0
+    /// (usize, usize) = breadth 2
+    /// (Vec<Vec<String>>, [String; 3]) = breadth 2
+    fn get_breadth(&self, counter: usize) -> usize;
 
     // Declarations... TypeWrapper ? as Vector again? vector and tuple declaration in text as [value1, value2, value3] with vec! for vectors.
-    
+    /// 1. get if the type can be declared as `const`
+    fn is_const(&self) -> bool;
+    /// 2. Value is valid - assume an input of (2,2,[2,3,4]) -> Tuple(NumType,NumType,Array|Vec<NumType>) 
+    /// 
+    /// Array|Vec in this case means that [2,3,4] is a valid declaration in text for array and vec tho vec can also have vec! prefixed
+    fn value_is_valid(&self, valuestr: &str) -> bool;
+
 
     // we need:
     
@@ -321,27 +392,27 @@ mod tests {
         let typestr = "&str".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::String(Reference::Naked,StringType::str);
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "enum: MyEnum".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::Special(Reference::None, SpecialType::Enum("MyEnum".to_string()));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "f32".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::Numeric(Reference::None,NumericType::f32);
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "Vec<u8>".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::Container(Reference::None, ContainerType::Vector(Box::new(RType::Numeric(Reference::None, NumericType::u8))));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "[usize, 3]".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::Container(Reference::None, ContainerType::Array(Box::new(RType::Numeric(Reference::None, NumericType::usize)), 3));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "Vec<[usize, 3]>".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
@@ -349,7 +420,7 @@ mod tests {
             Box::new(RType::Container(Reference::None, ContainerType::Array(
                 Box::new(RType::Numeric(Reference::None, NumericType::usize)), 3)        )))
             );
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "(usize,f32, &str)".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
@@ -358,7 +429,7 @@ mod tests {
             Box::new(RType::Numeric(Reference::None,NumericType::f32)),
             Box::new(RType::String(Reference::Naked,StringType::str)),
         ]));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "Vec<Vec<(usize, CStr)>>".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
@@ -370,33 +441,40 @@ mod tests {
                 ]))
             )))
         )));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "Vec<&'a str>".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = RType::Container(Reference::None, ContainerType::Vector(Box::new(RType::String(Reference::WithLifetime("'a".to_string()), StringType::str))));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let typestr = "Vec<&'a str>".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = result.to_typestr();
-        assert_eq!(typestr, expected);
+        assert_eq!(expected, typestr);
 
         let typestr = "(Vec<&str>, usize)".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = result.to_typestr();
-        assert_eq!(typestr, expected);        
+        assert_eq!(expected, typestr);        
 
         let typestr = "(Vec<Vec<&'a str>>, usize)".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = result.to_typestr();
-        assert_eq!(typestr, expected);
+        assert_eq!(expected, typestr);
+        assert_eq!(3, result.get_depth(0));
+
+        let typestr = "(usize, (usize, &str), f32)".to_string();
+        let result = RType::from_typestr(&typestr).unwrap();
+        let expected = result.to_typestr();
+        assert_eq!(expected, typestr);
+        assert_eq!(4, result.get_breadth(0));
 
 
 /*         let typestr = "(Vec<&'a str>, &'b OsStr, [&'a usize, 3])".to_string();
         let result = RType::from_typestr(&typestr).unwrap();
         let expected = result.to_typestr();
-        assert_eq!(typestr, expected);
+        assert_eq!(expected, typestr);
         let mut into: Vec<String> = vec![];
         result.collect_lifetimes(&mut into);
         let expected = vec!["'a","'b","'a"];

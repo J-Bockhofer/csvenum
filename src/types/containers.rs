@@ -1,3 +1,15 @@
+mod vectortype;
+pub use vectortype::VectorType;
+
+mod arraytype;
+pub use arraytype::ArrayType;
+
+mod tupletype;
+pub use tupletype::TupleType;
+
+mod utils;
+pub use utils::NestedValueParser;
+
 use super::{RType, RTypeTrait, TypeError, Reference};
 use regex::Regex;
 use std::sync::OnceLock;
@@ -7,7 +19,7 @@ pub const VECTOR_REGEX_STR: &'static str = r"^Vec<(.*)>"; // why is this so expl
 pub static VECTOR_REGEX: OnceLock<Regex> = OnceLock::new();
 
 /// Array regex
-pub const ARRAY_REGEX_STR: &'static str = r"^\[ ?(.+), ?([\d]+) ?\]";
+pub const ARRAY_REGEX_STR: &'static str = r"^\[ ?(.+)(?:,|;) ?([\d]+) ?\]";
 pub static ARRAY_REGEX: OnceLock<Regex> = OnceLock::new();
 
 /// Tuple regex 
@@ -52,7 +64,7 @@ impl RTypeTrait for ContainerType {
         // 3. Tuple          
         if let Some(captures) = tuple_re.captures(&typestr) {
             let inner_str = captures.get(1).unwrap().as_str();
-            let types_in_str: Vec<&str> = inner_str.split(',').collect();
+            let types_in_str: Vec<String> = NestedValueParser::parse_nested_str(inner_str); //.split(',').collect();
             let mut tuple_types: Vec<Box<RType>> = vec![];
             for inner_type in types_in_str {
                 let inner_type = inner_type.trim();
@@ -68,60 +80,39 @@ impl RTypeTrait for ContainerType {
     fn to_typestr(&self) -> String {
         match self {
             ContainerType::Vector(x) => {
-                format!("Vec<{}>", x.to_typestr())
+                VectorType::wrap_str(&x.to_typestr())
             },
             ContainerType::Array(x, y) => {
-                format!("[{}, {}]", x.to_typestr(), y)
+                ArrayType::wrap_str(&x.to_typestr(), y)
             },
             ContainerType::Tuple(vx) => {
-                let mut tuplestr = String::from("(");
-                for x in vx {
-                    tuplestr = tuplestr + &x.to_typestr() + ", ";
-                }
-                tuplestr.pop(); 
-                tuplestr.pop();
-                tuplestr.push(')');
-                tuplestr
+                TupleType::wrap_types_with_typefn(vx, |item: &RType| item.to_typestr())
             }
         }
     }
     fn to_typestr_no_ref(&self) -> String {
         match self {
             ContainerType::Vector(x) => {
-                format!("Vec<{}>", x.to_typestr_no_ref())
+                VectorType::wrap_str(&x.to_typestr_no_ref())
             },
             ContainerType::Array(x, y) => {
-                format!("[{}, {}]", x.to_typestr_no_ref(), y)
+                ArrayType::wrap_str(&x.to_typestr_no_ref(), y)
             },
             ContainerType::Tuple(vx) => {
-                let mut tuplestr = String::from("(");
-                for x in vx {
-                    tuplestr = tuplestr + &x.to_typestr_no_ref() + ", ";
-                }
-                tuplestr.pop(); 
-                tuplestr.pop();
-                tuplestr.push(')');
-                tuplestr
+                TupleType::wrap_types_with_typefn(vx, |item: &RType| item.to_typestr_no_ref())
             }
         }        
     }
     fn to_typestr_no_life(&self) -> String {
         match self {
             ContainerType::Vector(x) => {
-                format!("Vec<{}>", x.to_typestr_no_life())
+                VectorType::wrap_str(&x.to_typestr_no_life())
             },
             ContainerType::Array(x, y) => {
-                format!("[{}, {}]", x.to_typestr_no_life(), y)
+                ArrayType::wrap_str(&x.to_typestr_no_life(), y)
             },
             ContainerType::Tuple(vx) => {
-                let mut tuplestr = String::from("(");
-                for x in vx {
-                    tuplestr = tuplestr + &x.to_typestr_no_life() + ", ";
-                }
-                tuplestr.pop(); 
-                tuplestr.pop();
-                tuplestr.push(')');
-                tuplestr
+                TupleType::wrap_types_with_typefn(vx, |item: &RType| item.to_typestr_no_life())
             }
         } 
     }
@@ -141,6 +132,66 @@ impl RTypeTrait for ContainerType {
         }         
     }
 
+    fn is_const(&self) -> bool {
+        match self {
+            ContainerType::Vector(_) => {
+                false
+            },
+            ContainerType::Array(x, _) => {
+                x.is_const()
+            },
+            ContainerType::Tuple(vx) => {
+                for x in vx {
+                    if !x.is_const() {
+                        return false;
+                    }
+                }
+                true
+            }
+        }         
+    }
+
+    fn value_is_valid(&self, valuestr: &str) -> bool {
+        // we have to split the valuestr bc it may contain multiple values. let each type handle that independantly
+        match self {
+            ContainerType::Array(x, y) => {ArrayType::value_is_valid(valuestr, x, y)},
+            _ => {todo!("value valid not impl yet for tuple and vector")}
+        }
+
+
+    }
+    fn get_depth(&self, counter: usize) -> usize {
+        let counter = counter.saturating_add(1);
+        match self {
+            Self::Vector(x) => {x.get_depth(counter)},
+            Self::Array(x, _) => {x.get_depth(counter)},
+            Self::Tuple(vx) => {
+                let mut inner_cnt = 0; 
+                for x in vx {
+                    // get the max depth
+                    let cnt = x.get_depth(0);
+                    if cnt > inner_cnt {inner_cnt = cnt}
+                }
+                counter.saturating_add(inner_cnt)
+            }
+        }
+
+    }
+    fn get_breadth(&self, counter: usize) -> usize {
+        match self {
+            Self::Array(x, _) => {x.get_breadth(counter)},
+            Self::Vector(x) => {x.get_breadth(counter)},
+            Self::Tuple(vx) => {
+                let mut breadth: usize = counter;
+                for x in vx {
+                    // get the max depth
+                    breadth = breadth.saturating_add(x.get_breadth(0));
+                }                 
+                breadth
+            }
+        }
+    }
+
 }
 
 #[cfg(test)]
@@ -153,14 +204,14 @@ mod tests {
         let input = "Vec< &str>";
         let result = ContainerType::from_typestr(input).unwrap();
         let expected = ContainerType::Vector(Box::new(RType::String(Reference::Naked,StringType::str)));
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let input = "[usize, 3]";
         let result = ContainerType::from_typestr(input).unwrap();
         let expected = ContainerType::Array(
             Box::new(RType::Numeric(Reference::None,NumericType::usize)), 3
         );
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
 
         let input = "(usize,usize,enum:MyEnum)";
         let result = ContainerType::from_typestr(input).unwrap();
@@ -169,17 +220,31 @@ mod tests {
             Box::new(RType::Numeric(Reference::None,NumericType::usize)), 
             Box::new(RType::Special(Reference::None,SpecialType::Enum("MyEnum".to_string())))
         ]);
-        assert_eq!(result, expected);
-            
+        assert_eq!(expected, result);
+        let expected = false;
+        assert_eq!(expected, result.is_const());
+
         let input = "(Vec<&str>, usize, enum:MyEnum)";
         let result = ContainerType::from_typestr(input).unwrap().to_typestr();
         let expected = "(Vec<&str>, usize, MyEnum)";
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
+
 
         let input = "(Vec<&'a str>)";
         let result = ContainerType::from_typestr(input).unwrap().to_typestr();
         let expected = "(Vec<&'a str>)";
-        assert_eq!(result, expected);
+        assert_eq!(expected, result);
+
+        let result = ContainerType::from_typestr(input).unwrap().to_typestr_no_ref();
+        let expected = "(Vec<str>)";
+        assert_eq!(expected, result);
+
+        let input = "[usize, 3]";
+        let result = ContainerType::from_typestr(input).unwrap();
+        let values = "[3,3,3]";
+        assert!(result.value_is_valid(values));
+        let values = "[art,3.52,3]";
+        assert_eq!(false, result.value_is_valid(values));
 
     }
 

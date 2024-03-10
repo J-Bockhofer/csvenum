@@ -15,7 +15,7 @@ pub mod enumtable;
 pub mod code_gen;
 
 pub mod types;
-pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType};
+pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType, Reference};
 
 
 //pub mod variants;

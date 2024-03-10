@@ -113,7 +113,7 @@ impl VarType {
 }
 
 #[derive(Debug, Clone, Default)]
-struct MatchBlock {
+pub struct MatchBlock {
     pub match_this: String,
     num_arms: usize,
     arms_lh: Vec<String>,
