@@ -92,7 +92,7 @@ pub struct Enumdotrs {
 
 pub fn generate_from_csv_to_file() {
 
-    let lines = read_file_lines("tests/pisse.csv").unwrap();
+    let lines = read_file_lines("tests_a/pisse.csv").unwrap();
 
     let et = EnumTable::from_csv_lines(lines).unwrap();
 
@@ -114,7 +114,7 @@ pub fn generate_from_csv_to_file() {
     }
 
     let lines = code_doc.print_to_lines();
-    write_lines_to_file("tests/pisse.rs", lines).unwrap();    
+    write_lines_to_file("tests_a/pisse.rs", lines).unwrap();    
 }
 
 

@@ -10,36 +10,48 @@ pub struct NestedValueParser {
 
 impl NestedValueParser {
 
-    pub fn parse_nested_str(input: &str) -> Vec<String> {
+    pub fn parse_nested_str(input: &str, csymbol: char, clear_self: bool) -> Vec<String> {
         // we start with either a value | [ | ( |  " for regex
         let mut values = vec![];
+        if input.is_empty() {return vec![]}
         let mut input = input.trim().to_string();
         // start walking through the string
-        match input.chars().nth(0).unwrap() {
-            '(' | '[' | '"' => {input.remove(0); input.pop();}, // clear the value wrapper () [] ""
-            _ => {},
-        };
+        if clear_self {
+            match input.chars().nth(0).unwrap() {
+                c if c == csymbol => {input.remove(0); input.pop();}, // clear the value wrapper () [] "" '(' | '[' | '"'
+                _ => {},
+            };
+        }
+        if input.is_empty() {return values}
         let mut recorded_chars = String::new();
         let mut inner_opened = false;
+        let mut open_cnt:usize = 0;
         let mut previous: char = input.chars().nth(0).unwrap();
         let mut is_escaped: bool;
         let mut recorded_only_whitespace = true;
         for ch in input.chars() {
             if previous == '\\' {is_escaped = true} else {is_escaped = false}
-            if ch == ',' && !inner_opened && !recorded_only_whitespace {
+            if ch == ',' && !inner_opened && !recorded_only_whitespace && open_cnt == 0  {
                 values.push(recorded_chars.trim().to_string());
                 recorded_chars = String::new();
                 continue
             }
             if !is_escaped {
                 if ch == '(' || ch == '[' || ch == '"' {
+                    open_cnt = open_cnt.saturating_add(1);
                     inner_opened = true;
-                    if !recorded_chars.is_empty() && !recorded_only_whitespace {
+                    // We have opened a new inner, check if an inner already exists, then we will treat it as part of the same valuestr
+                    if !recorded_chars.is_empty() && !recorded_only_whitespace && open_cnt == 0 {
+                        // Only push the recorded_chars as a whole valuestr when: 
+                        // 1. it isnt empty
+                        // 2. it does not only contain whitespaces
+                        // 3. does not have any inner container opened
                         values.push(recorded_chars.trim().to_string());
                         recorded_chars = String::new();
                     } 
                 }
                 if ch == ')' || ch == ']' || ch == '"' {
+                    open_cnt = open_cnt.saturating_sub(1);
                     inner_opened = false;
                 }
             }
@@ -54,7 +66,7 @@ impl NestedValueParser {
         if !recorded_chars.is_empty() && !recorded_only_whitespace {
             values.push(recorded_chars.trim().to_string());
         }        
-        println!("{:?}", values);
+        //println!("{:?}", values);
         values
     }
 }
@@ -63,23 +75,53 @@ impl NestedValueParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ RType, Reference, ContainerType}; //NumericType, StringType, SpecialType,
+    //use crate::{ RType, Reference, ContainerType}; //NumericType, StringType, SpecialType,
 
     #[test]
     fn test_util_parse_nested_values() { 
         let input = "(3,2,5,(3,5,6),6)";
-        let result = NestedValueParser::parse_nested_str(input);
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
         let expected: Vec<&str> = vec!["3","2","5","(3,5,6)", "6"];
         assert_eq!(expected, result);
 
         let input = "(usize,str,regex,(Vec<str>,Vec<Vec<str>>,gandalf),6)";
-        let result = NestedValueParser::parse_nested_str(input);
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
         let expected: Vec<&str> = vec!["usize","str","regex","(Vec<str>,Vec<Vec<str>>,gandalf)", "6"];
         assert_eq!(expected, result);
 
         let input = "(&'static str, usize)";
-        let result = NestedValueParser::parse_nested_str(input);
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
         let expected: Vec<&str> = vec!["&'static str","usize"];
+        assert_eq!(expected, result);
+
+        let input = "((usize, usize), usize)";
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
+        let expected: Vec<&str> = vec!["(usize, usize)","usize"];
+        assert_eq!(expected, result);
+
+        let input = "(((usize, usize), usize), usize)";
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
+        let expected: Vec<&str> = vec!["((usize, usize), usize)","usize"];
+        assert_eq!(expected, result);
+
+        let input = "[[[usize; 3]]]";
+        let result = NestedValueParser::parse_nested_str(input, '[', true);
+        let expected: Vec<&str> = vec!["[[usize; 3]]"];
+        assert_eq!(expected, result);
+
+        let input = "([[usize; 3]], usize)";
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
+        let expected: Vec<&str> = vec!["[[usize; 3]]", "usize"];
+        assert_eq!(expected, result);
+
+        let input = "([[usize; 3]], usize)";
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
+        let expected: Vec<&str> = vec!["[[usize; 3]]", "usize"];
+        assert_eq!(expected, result);
+
+        let input = "((usize, usize), usize, [usize; 3])";
+        let result = NestedValueParser::parse_nested_str(input, '(', true);
+        let expected: Vec<&str> = vec!["(usize, usize)", "usize", "[usize; 3]"];
         assert_eq!(expected, result);
     }
 

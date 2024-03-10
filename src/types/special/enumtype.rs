@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 use regex::Regex;
 
-use crate::{RType, SpecialType};
+use crate::{SpecialType};
 
 const VARIANT_REGEX_STR: &'static str = r" ?([a-zA-z]+[0-9a-zA-z_]*)"; 
 static VARIANT_REGEX: OnceLock<Regex> = OnceLock::new();

@@ -10,7 +10,7 @@ pub use tupletype::TupleType;
 mod utils;
 pub use utils::NestedValueParser;
 
-use super::{RType, RTypeTrait, TypeError, Reference};
+use super::{RType, RTypeTrait, TypeError};
 use regex::Regex;
 use std::sync::OnceLock;
 
@@ -52,6 +52,7 @@ impl RTypeTrait for ContainerType {
         // 1. Vector
         if let Some(captures) = vec_re.captures(&typestr) {
             let inner_type = captures.get(1).unwrap().as_str();
+            //println!("Vector inner typestr: {}", inner_type);
             return Ok(ContainerType::Vector(Box::new(RType::from_typestr(inner_type)?)));
         }
         // 2. Array
@@ -64,7 +65,7 @@ impl RTypeTrait for ContainerType {
         // 3. Tuple          
         if let Some(captures) = tuple_re.captures(&typestr) {
             let inner_str = captures.get(1).unwrap().as_str();
-            let types_in_str: Vec<String> = NestedValueParser::parse_nested_str(inner_str); //.split(',').collect();
+            let types_in_str: Vec<String> = NestedValueParser::parse_nested_str(inner_str, '(', false); //.split(',').collect();
             let mut tuple_types: Vec<Box<RType>> = vec![];
             for inner_type in types_in_str {
                 let inner_type = inner_type.trim();
@@ -80,10 +81,10 @@ impl RTypeTrait for ContainerType {
     fn to_typestr(&self) -> String {
         match self {
             ContainerType::Vector(x) => {
-                VectorType::wrap_str(&x.to_typestr())
+                VectorType::wrap_typestr(&x.to_typestr())
             },
             ContainerType::Array(x, y) => {
-                ArrayType::wrap_str(&x.to_typestr(), y)
+                ArrayType::wrap_typestr(&x.to_typestr(), y)
             },
             ContainerType::Tuple(vx) => {
                 TupleType::wrap_types_with_typefn(vx, |item: &RType| item.to_typestr())
@@ -93,10 +94,10 @@ impl RTypeTrait for ContainerType {
     fn to_typestr_no_ref(&self) -> String {
         match self {
             ContainerType::Vector(x) => {
-                VectorType::wrap_str(&x.to_typestr_no_ref())
+                VectorType::wrap_typestr(&x.to_typestr_no_ref())
             },
             ContainerType::Array(x, y) => {
-                ArrayType::wrap_str(&x.to_typestr_no_ref(), y)
+                ArrayType::wrap_typestr(&x.to_typestr_no_ref(), y)
             },
             ContainerType::Tuple(vx) => {
                 TupleType::wrap_types_with_typefn(vx, |item: &RType| item.to_typestr_no_ref())
@@ -106,10 +107,10 @@ impl RTypeTrait for ContainerType {
     fn to_typestr_no_life(&self) -> String {
         match self {
             ContainerType::Vector(x) => {
-                VectorType::wrap_str(&x.to_typestr_no_life())
+                VectorType::wrap_typestr(&x.to_typestr_no_life())
             },
             ContainerType::Array(x, y) => {
-                ArrayType::wrap_str(&x.to_typestr_no_life(), y)
+                ArrayType::wrap_typestr(&x.to_typestr_no_life(), y)
             },
             ContainerType::Tuple(vx) => {
                 TupleType::wrap_types_with_typefn(vx, |item: &RType| item.to_typestr_no_life())
@@ -121,7 +122,7 @@ impl RTypeTrait for ContainerType {
             ContainerType::Vector(x) => {
                 x.collect_lifetimes(into);
             },
-            ContainerType::Array(x, y) => {
+            ContainerType::Array(x, _) => {
                 x.collect_lifetimes(into);
             },
             ContainerType::Tuple(vx) => {
@@ -131,7 +132,6 @@ impl RTypeTrait for ContainerType {
             }
         }         
     }
-
     fn is_const(&self) -> bool {
         match self {
             ContainerType::Vector(_) => {
@@ -155,7 +155,8 @@ impl RTypeTrait for ContainerType {
         // we have to split the valuestr bc it may contain multiple values. let each type handle that independantly
         match self {
             ContainerType::Array(x, y) => {ArrayType::value_is_valid(valuestr, x, y)},
-            _ => {todo!("value valid not impl yet for tuple and vector")}
+            ContainerType::Vector(x) => {VectorType::value_is_valid(valuestr, x)},
+            ContainerType::Tuple(vx) => {TupleType::value_is_valid(valuestr, vx)},
         }
 
 
@@ -182,9 +183,9 @@ impl RTypeTrait for ContainerType {
             Self::Array(x, _) => {x.get_breadth(counter)},
             Self::Vector(x) => {x.get_breadth(counter)},
             Self::Tuple(vx) => {
-                let mut breadth: usize = counter;
+                let mut breadth: usize = counter ;//+ vx.len();
                 for x in vx {
-                    // get the max depth
+                    // get the full breadth
                     breadth = breadth.saturating_add(x.get_breadth(0));
                 }                 
                 breadth
@@ -197,7 +198,7 @@ impl RTypeTrait for ContainerType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{NumericType, StringType, SpecialType};
+    use crate::{NumericType, StringType, SpecialType, Reference};
 
     #[test]
     fn test_parse_container_type() { 

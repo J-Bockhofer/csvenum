@@ -116,7 +116,7 @@ mod tests {
             code_doc.add_block(fun);
         }
 
-        code_doc.write_to_file("tests/pisse.rs");
+        code_doc.write_to_file("tests_a/pisse.rs");
 
         //println!("{:?}", &text);
         //println!("{:?}", &vars);

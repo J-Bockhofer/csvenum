@@ -86,6 +86,7 @@ impl RTypeTrait for StringType {
     fn to_typestr_no_life(&self) -> String {
         self.to_typestr()
     }
+    #[allow(unused_variables)]
     fn collect_lifetimes(&self, into: &mut Vec<String>) {
         // We dont have any life times here
     }
@@ -103,6 +104,7 @@ impl RTypeTrait for StringType {
             _ => {false},
         }        
     }
+    #[allow(unused_variables)]
     fn value_is_valid(&self, valuestr: &str) -> bool {
         true // lol
     }
@@ -110,7 +112,7 @@ impl RTypeTrait for StringType {
         counter + 0
     }
     fn get_breadth(&self, counter: usize) -> usize {
-        counter + 0
+        counter + 1
     }
 }
 

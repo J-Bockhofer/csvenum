@@ -18,6 +18,7 @@ impl SpecialType {
 }
 
 impl RTypeTrait for SpecialType {
+    #[allow(unused_variables)]
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
         use super::TypeError;
         Err(TypeError::SPECIALTYPEPARSE)
@@ -43,6 +44,7 @@ impl RTypeTrait for SpecialType {
     fn to_typestr_no_life(&self) -> String {
         self.to_typestr()
     }
+    #[allow(unused_variables)]
     fn collect_lifetimes(&self, into: &mut Vec<String>) {
         // We dont have any life times here
     }
@@ -74,7 +76,7 @@ impl RTypeTrait for SpecialType {
         counter + 0
     }
     fn get_breadth(&self, counter: usize) -> usize {
-        counter + 0
+        counter + 1
     }
 }
 
