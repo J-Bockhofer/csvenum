@@ -28,11 +28,12 @@ impl ArrayType {
     /// rtype = type T of the array [T; N]
     pub fn value_is_valid(valuestr: &str, rtype: &Box<RType>, size: &usize) -> bool {
         //let aaa: [Vec<String>; 3] = [vec![], vec![], vec![]];
+        let values = NestedValueParser::parse_nested_str(valuestr);
         println!("RType: {:?}", rtype);
         println!("ValStr: {:?}", valuestr);
         println!("Size: {:?}", size);
 
-        // Example valuestr = "[[3,3,3], [3,3,3], [3,3,3]]"
+/*         // Example valuestr = "[[3,3,3], [3,3,3], [3,3,3]]"
         let mut valuestr = valuestr.trim().to_string();
         let firstchar = valuestr.remove(0);
         if firstchar != '[' {return false}
@@ -47,15 +48,19 @@ impl ArrayType {
             RType::Container(_, _) => {todo!("nested pain")}
             _ => {
                 let valuestrs: Vec<&str> = valuestr.trim().split(',').collect();
-                if valuestrs.len() != *size {return false} // no as many values as the size implies
+                if valuestrs.len() != *size {return false} // not as many values as the size implies
                 for val in valuestrs {
                     if !rtype.value_is_valid(val) {return false}
                 }
                 true
 
             } 
+        } */
+        let mut is_valid = true;
+        for value in values {
+            if !rtype.value_is_valid(&value) {is_valid = false}
         }
-
+        is_valid
 
 
 
