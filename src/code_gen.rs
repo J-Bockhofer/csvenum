@@ -9,6 +9,8 @@ mod utils;
 
 mod trait_impl;
 
+mod testblock;
+
 /// will need to convert enumtable into -> code
 /// imports (need to import Regex and, or OnceLock)
 /// Enum declaration
@@ -39,6 +41,7 @@ use self::enumdecl::{generate_enum_decl, generate_get_all_variants_fn, generate_
 
 use self::propfns::generate_property_fns;
 
+use self::testblock::generate_testblock;
 use self::trait_impl::{generate_impl_block, generate_impl_fmt_display};
 
 use super::enumtable::EnumTable;
@@ -77,6 +80,8 @@ pub struct EnumModule {
 // 8. test: MyEnum do a barrel roll... convert between all representations
 // testimpl
 //
+    pub test_block: TextBlock,
+
 
 }
 
@@ -91,8 +96,26 @@ impl EnumModule {
             propfn_blocks: generate_property_fns(&et),
             impl_block: generate_impl_block(&et),
             fmt_block: generate_impl_fmt_display(&et),
-        
+            test_block: generate_testblock(&et),  
         }
+    }
+    /// for printing to a singular file
+    pub fn to_lines(&self) -> Vec<String> {
+        let mut lines = vec![];
+        for imp in &self.imports {
+           lines.push(imp.to_string());
+        }
+        self.enumdeclaration.collect_lines_into(&mut lines);
+        self.get_all_variants_fn.collect_lines_into(&mut lines);
+        self.variants_as_str_module.collect_lines_into(&mut lines);
+
+        for blk in &self.propfn_blocks {
+            blk.1.collect_lines_into(&mut lines);
+        }
+        self.impl_block.collect_lines_into(&mut lines);
+        self.fmt_block.collect_lines_into(&mut lines);
+        self.test_block.collect_lines_into(&mut lines);     
+        lines
     }
 }
 
@@ -112,7 +135,7 @@ impl std::fmt::Display for EnumModule {
         }
         write!(f,"{}", self.impl_block)?;
         write!(f,"{}", self.fmt_block)?;
-
+        write!(f,"{}", self.test_block)?;
         Ok(())
     }
 } 

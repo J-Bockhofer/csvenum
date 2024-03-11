@@ -7,6 +7,9 @@ pub fn generate_enum_decl(et: &EnumTable) -> TextBlock {
     let variants = et.get_variants();
     let properties = et.get_properties();
 
+    tb.add_line(String::from(
+        "#[derive(Debug, Eq, PartialEq)]"
+    ));
     tb.add_line(format!("pub enum {}", et.get_name())); // {{
     tb.open_closure(true);     
     
@@ -54,7 +57,7 @@ pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
     tb.add_line(String::from("];"));
 
     // declare the function
-    let fn_decl = format!("pub fn {}_get_all_variants({}: {}) -> [{}; {}]", enumname_lc, enumname_lc, enumname, enumname, variants.len());
+    let fn_decl = format!("pub fn {}_get_all_variants() -> [{}; {}]", enumname_lc, enumname, variants.len());
     tb.add_line(fn_decl);
     tb.open_closure(true);
     tb.add_line_indented(String::from(const_varname));
@@ -89,7 +92,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
 
     // make matching functions
     tb.add_line(format!("/// Returns the variants name as a &str."));
-    let fn_decl = format!("pub fn {}_as_variant_str({}: {}) -> &'static str", enumname_lc, enumname_lc, enumname);
+    let fn_decl = format!("pub fn {}_as_variant_str({}: &{}) -> &'static str", enumname_lc, enumname_lc, enumname);
     tb.add_line(fn_decl);
     tb.open_closure(true);
     let matchblock = MatchBlock::from_keys(enumname_lc.clone(), var_names.clone(), const_names.clone(), true);

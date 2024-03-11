@@ -15,20 +15,20 @@ pub fn generate_impl_block(et: &EnumTable) -> TextBlock {
     tb.add_line(format!("impl {}", enumname));
     tb.open_closure(true);
     // fn for get all,
-    let fn_get_all = format!("pub fn {}_get_all_variants(self) -> [Self; {}]", enumname_lc, variants.len());
+    let fn_get_all = format!("pub fn get_all_variants() -> [Self; {}]", variants.len());
     tb.add_line_indented(fn_get_all);
     tb.open_closure(true);
-    let linker = format!("{}_get_all_variants(self)", enumname_lc);
+    let linker = format!("{}_get_all_variants()", enumname_lc);
     tb.add_line_indented(linker);
     tb.close_closure(true);
     // fns for as+from_var
-    let fn_as_var = format!("pub fn {}_as_variant_str(self) -> &'static str", enumname_lc);
+    let fn_as_var = String::from("pub fn as_variant_str(&self) -> &'static str");
     tb.add_line_indented(fn_as_var);
     tb.open_closure(true);
     let linker = format!("{}_as_variant_str(self)", enumname_lc);
     tb.add_line_indented(linker);
     tb.close_closure(true);    
-    let fn_from_var = format!("pub fn {}_from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<Self>", enumname_lc);
+    let fn_from_var = String::from("pub fn from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<Self>");
     tb.add_line_indented(fn_from_var);
     tb.open_closure(true);
     let linker = format!("{}_from_variant_str(variantstr)", enumname_lc);
@@ -43,7 +43,7 @@ pub fn generate_impl_block(et: &EnumTable) -> TextBlock {
         let prop_lc = prop_name.to_ascii_lowercase();
         tb.add_line_indented(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
-            "pub fn {}_as_{}(self) -> {}{}", &enumname_lc, prop_lc, typeprefix, no_ref_type
+            "pub fn as_{}(&self) -> {}{}", prop_lc, typeprefix, no_ref_type
         );
         tb.add_line_indented(asfn_hdr);
         tb.open_closure(true);
@@ -51,7 +51,7 @@ pub fn generate_impl_block(et: &EnumTable) -> TextBlock {
         tb.add_line_indented(linker);
         tb.close_closure(true); 
         let fromfn_hdr = format!(
-            "pub fn {}_from_{}({}: {}) -> Option<Self>", enumname_lc, prop_lc, prop_lc, col_type.to_typestr()
+            "pub fn from_{}({}: {}) -> Option<Self>", prop_lc, prop_lc, col_type.to_typestr()
         );
         tb.add_line_indented(fromfn_hdr);
         tb.open_closure(true);
@@ -93,7 +93,7 @@ pub fn generate_impl_fmt_display(et: &EnumTable) -> TextBlock {
             val_str = format!("{}, {} = {} ", val_str, prop, valstr)
             //val_str += &valstr;
         } // writeln!(f, "{}", line)?;
-        matchblk.add_arm(var_name, format!("writeln!(f, \"{}\")?;", val_str))
+        matchblk.add_arm(var_name, format!("writeln!(f, \"{{}}{}\", self.as_variant_str())?", val_str,))
 
     }
     tb.append_lines(matchblk.to_lines());

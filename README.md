@@ -2,7 +2,7 @@
 csvenum? 
 
 
-## WHat problem is this solving?
+## What problem is this solving?
 
 
 ## Usage
@@ -21,9 +21,9 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 1. descriptions for columns
 
-2. print to console
+2. print to console [x]
 
-3. impl wrapper for pure/movable functions
+3. impl wrapper for pure/movable functions [x]
 
 4. property type: Vec -> checking for duplicate values in table? [x]
 
@@ -33,15 +33,15 @@ Structure as Enum + const declarations per property + as and from fn per propert
 
 6. Const property type: Regex, make r'' itself be a const &str that will then get passed to the regex constructor in the OnceLock (also need to cargo add regex, use regex::Regex)
 
-7. Error in return types
+7. Error in return types [no]
 
-8. impl Ord, Eq
+8. impl Ord, Eq [no Ord]
 
 9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways [x] + ref and lifetime :)
 
-10. impl std::fmt::Display on the enum
+10. impl std::fmt::Display on the enum [x]
 
-11. Get variant as name str for free
+11. Get variant as name str for free [x]
 
 12. empty line in csv [x]
 
@@ -63,10 +63,6 @@ The compiled binary will contain all the constants in a easily readable form.
 
 ## Ideas
 
-1. Could define a trait too
-    Say trait country with fn self_as_county() -> Option<Country>
-    Makes it real easy to define a custom mapping to the associated constants.
-    Just impl the trait, bam.
 
-2. Merging of modified docs
+1. Merging of modified docs
     Simple...not: where mapping existed before, keep modification. new mapping integrate. keep all other modifications.

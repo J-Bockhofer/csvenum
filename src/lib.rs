@@ -1,92 +1,31 @@
-use std::io::Write;
+
 
 //pub mod properties;
 
 extern crate regex;
-
+extern crate clap;
 //use et_error::ETError;
 
 //use properties::ConstProperty;
 pub mod parser;
-//use parser::TableParser;
+pub use parser::TableParser;
 
 pub mod enumtable;
+pub use enumtable::EnumTable;
 
 pub mod code_gen;
+pub use code_gen::EnumModule;
 
 pub mod types;
+use parser::ToEnumTable;
 pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType, Reference};
 
 
-//pub mod variants;
-
-//use variants::Variant;
-/// Property will be converted to: 
-/// - Two functions:
-/// 
-///     as_(name) -> Enum
-/// 
-///     from_(name) -> (type_str)
-/// 
-/// 
-/// - One Constant per Variant
-/// 
-///     const (VARIANT)_(NAME): (type_str)
-pub mod table;
-pub use table::EnumTable;
-
-pub mod utils;
-pub use utils::*;
 
 pub mod reader;
 use reader::{read_file_lines, write_lines_to_file};
 
-pub mod to_code;
-pub use to_code::{TextBlock, format_enum};
-use to_code::{funcblock::{make_fn_get_all_variants, generate_fn_blocks}, format_consts};
-#[derive(Debug)]
-pub struct Document {
-    //pub imports: TextBlock,
-    code: Vec<TextBlock>,
-}
-impl Document {
-    pub fn new() -> Self {
-        Document { 
-            code: vec![], 
-        }
-    }
 
-    pub fn add_block(&mut self, textblock: TextBlock) {
-        self.code.push(textblock);
-    }
-
-    pub fn write_to_file(&self, path: &str) {
-        let mut file = std::fs::File::create(path).expect("Unable to create file");
-        for block in &self.code {
-            for line in &block.lines {
-                writeln!(file, "{}", line).expect("Unable to write line to file");
-            }
-        }
-    }
-
-    pub fn print_to_lines(self) -> Vec<String> {
-        let mut lines = vec![];
-        for block in self.code {
-            for line in block.lines {
-                lines.push(line);
-            }
-        }
-        lines
-    }
-
-}
-
-
-
-/// Main struct that will be called with the csv file
-pub struct Enumdotrs {
-
-}
 
 
 
@@ -94,26 +33,15 @@ pub fn generate_from_csv_to_file() {
 
     let lines = read_file_lines("tests_a/pisse.csv").unwrap();
 
-    let et = EnumTable::from_csv_lines(lines).unwrap();
+    let parser =  TableParser::from_csv_lines(lines, "$").unwrap();
 
-    let variants = et.get_variants();
-    //let properties = et.get_properties();
-    //let types = et.get_types();
-    let enumname = et.get_enumname();
+    let et = parser.to_enumtable().unwrap();
 
-    //let vars = make_vars(enumname, variants, properties, types).unwrap();
+    let em = EnumModule::new(&et, "tests_a/pisse.csv".to_string());
 
-    let mut code_doc = Document::new();
-    code_doc.add_block(format_enum(&et));
-    code_doc.add_block(make_fn_get_all_variants(enumname, variants));
+    let lines = em.to_lines();
 
-    code_doc.add_block(format_consts(&et));
-    let fnblocks = generate_fn_blocks(&et);
-    for fun in fnblocks {
-        code_doc.add_block(fun);
-    }
 
-    let lines = code_doc.print_to_lines();
     write_lines_to_file("tests_a/pisse.rs", lines).unwrap();    
 }
 
