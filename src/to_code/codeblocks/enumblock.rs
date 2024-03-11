@@ -32,7 +32,7 @@ pub struct EnumBlock
     }
 
     fn set_variants<T: AsRef<str>>(&mut self, variants: Vec<T>) {
-        self.variantnames = variants.iter().map(|v| v.as_ref().to_string()).collect();;
+        self.variantnames = variants.iter().map(|v| v.as_ref().to_string()).collect();
     }
 
     pub fn set_properties<T: AsRef<str>>(&mut self, properties: Vec<T>) {

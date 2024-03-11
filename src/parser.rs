@@ -21,10 +21,10 @@ pub enum ParserError {
 ///     use table2enum::parser::{TableParser, ToEnumTable};
 /// 
 ///     let rows: Vec<&str> = vec![
-///         "TYPES,         &str,       (usize$f64),    enum: E",
+///         "TYPES,         &str,       (usize$f64),    &str",
 ///         "MyEnumName,    Property1,  Property2,      Property3",
-///         "Variant1,      standard,   (0$3.14),       A",
-///         "Variant2,      medium,     (0$9.82),       B",
+///         "Variant1,      standard,   (0$3.14),       cheap",
+///         "Variant2,      medium,     (0$9.82),       pricey",
 ///     ];
 /// 
 ///     let table_parser = TableParser::from_csv_lines(rows, "$");
@@ -145,6 +145,8 @@ impl ToEnumTable for TableParser {
         let values = &self.data_cols[1..self.data_cols.len()];
         enumtable.set_data(values.to_owned());
         enumtable.check_duplicates()?;
+        enumtable.check_valid_values()?;
+        enumtable.check_valid_types_for_code()?;
         
 
         Ok(enumtable)

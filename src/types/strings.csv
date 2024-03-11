@@ -1,7 +1,0 @@
-TYPES,      &'static str 
-String,     String
-str,        str
-OsString,   OsString
-OsStr,      OsStr
-CString,    CString
-CStr,       CStr

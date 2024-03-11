@@ -39,6 +39,20 @@ impl ArrayType {
         }
         true
     }
+
+    pub fn wrap_valuestr(valuestr: &str, rtype: &Box<RType>, size: &usize) -> String {
+        let values = NestedValueParser::parse_nested_str(valuestr, '[', true);
+
+        let mut wrapped_str = String::from("[");
+        //let mut is_valid = true;
+        for value in values {
+            let valstr = rtype.wrap_valuestr(&value);
+            wrapped_str = format!("{}{}, ", wrapped_str, valstr);
+        }
+        wrapped_str.pop(); wrapped_str.pop();
+        wrapped_str += "]";
+        wrapped_str
+    }
 }
 
 
@@ -72,7 +86,15 @@ mod tests {
         assert_eq!(false, rtype.value_is_valid(values));
     }
 
-
+    #[test]
+    fn test_arraytype_wrap_values() {
+        let typestr = "[[usize; 3]; 3]";
+        let values = "[[3,3,3], [3,3,3], [3,3,3]]";
+        let rtype = RType::from_typestr(typestr).unwrap();
+        assert_eq!(true, rtype.value_is_valid(values));
+        let expected = "[[3, 3, 3], [3, 3, 3], [3, 3, 3]]";
+        assert_eq!(expected, rtype.wrap_valuestr(values));
+    }
 
 
 }

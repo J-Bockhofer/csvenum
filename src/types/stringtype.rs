@@ -114,6 +114,9 @@ impl RTypeTrait for StringType {
     fn get_breadth(&self, counter: usize) -> usize {
         counter + 1
     }
+    fn wrap_valuestr(&self, valuestr: &str) -> String {
+        format!("\"{}\"", valuestr)
+    }
 }
 
 

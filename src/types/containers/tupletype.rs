@@ -43,6 +43,21 @@ impl TupleType {
         }
         true
     }
+
+    pub fn wrap_valuestr(valuestr: &str, rtypes: &Vec<Box<RType>>) -> String {
+        let values = NestedValueParser::parse_nested_str(valuestr, '(', true);
+        let mut wrapped_str = String::from("(");
+        let tuple_size = rtypes.len();
+        for i in 0..tuple_size {
+            let valstr = rtypes[i].wrap_valuestr(&values[i]);
+            wrapped_str = format!("{}{}, ", wrapped_str, valstr);
+        }
+        wrapped_str.pop(); wrapped_str.pop();
+        wrapped_str += ")";
+        wrapped_str
+
+
+    }
 }
 
 
@@ -83,8 +98,22 @@ mod tests {
         let values = "((2,2)3,[5,5,5])";
         assert_eq!(false, rtype.value_is_valid(values));
         let values = "(art,5.43,3)";
-        //assert_eq!(false, ArrayType::value_is_valid(values, &Box::new(RType::Container(Reference::None, result)), &3));
         assert_eq!(false, rtype.value_is_valid(values));
+    }
+
+    #[test]
+    fn test_tupletype_wrap_values() { 
+        let input = "((usize, usize), usize, [usize; 3])";
+        let rtype = RType::from_typestr(input).unwrap();
+        let values = "((2,2),3,[5,5,5])";
+        let expected = "((2, 2), 3, [5, 5, 5])".to_string();
+        assert_eq!(expected, rtype.wrap_valuestr(values));
+
+        let input = "((usize, usize), &str, [usize; 3])";
+        let rtype = RType::from_typestr(input).unwrap();
+        let values = "((2,2),3,[5,5,5])";
+        let expected = "((2, 2), \"3\", [5, 5, 5])".to_string();
+        assert_eq!(expected, rtype.wrap_valuestr(values));
     }
 
 }

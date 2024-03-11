@@ -58,7 +58,7 @@ impl RTypeTrait for SpecialType {
 /*         match self {
             Self::Enum(_) => {false},
             Self::Regex => {false},
-        } */        
+        }   */      
     }
     /// For enums, values are variants, so the Rust syntax rules for Enum variants apply, it could also have the name of the enum prefixed
     /// 
@@ -77,6 +77,19 @@ impl RTypeTrait for SpecialType {
     }
     fn get_breadth(&self, counter: usize) -> usize {
         counter + 1
+    }
+    fn wrap_valuestr(&self, valuestr: &str) -> String {
+        match self {
+            Self::Enum(x) => {
+                if !valuestr.contains(x) {
+                    format!("{}::{}",x , valuestr)
+                } else {valuestr.to_string()}
+            }
+            Self::Regex => {
+                todo!("Impl wrapping for value of type regex with OnceLock get_or_init ...");
+            }
+        }
+        
     }
 }
 

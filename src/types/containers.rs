@@ -193,6 +193,15 @@ impl RTypeTrait for ContainerType {
         }
     }
 
+    fn wrap_valuestr(&self, valuestr: &str) -> String {
+        match self {
+            ContainerType::Array(x, y) => {ArrayType::wrap_valuestr(valuestr, x, y)},
+            ContainerType::Vector(x) => {VectorType::wrap_valuestr(valuestr, x)},
+            ContainerType::Tuple(vx) => {TupleType::wrap_valuestr(valuestr, vx)},
+            //_ => {todo!("Implement value wrapping for Option")}
+        }
+    }
+
 }
 
 #[cfg(test)]

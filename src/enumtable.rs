@@ -14,6 +14,13 @@ pub enum TableError {
     OutOfBoundsColumn(usize, usize),
     #[error("Duplicate value detected in column: {0}, row: {1} with value: {2}.")]
     DuplicateValue(String, usize, String),
+    #[error("Invalid value: {0} for property: {1} with type:{2} detected in row: {3}.")]
+    InvalidValueForPropertyWithTypeAtRow(String, String, String, usize),
+    #[error("Failed to get valid data for a field of the EnumTable struct.")]
+    DataEmpty,
+    #[error("Missing feature: {0}")]
+    MissingFeature(String),
+
 }
 
 use crate::{RType, RTypeTrait};
@@ -26,10 +33,10 @@ use crate::{RType, RTypeTrait};
 ///     use table2enum::parser::{TableParser, ToEnumTable};
 /// 
 ///     let rows: Vec<&str> = vec![
-///         "TYPES,         &str,       (usize$f64),    enum: E",
+///         "TYPES,         &str,       (usize$f64),    &str",
 ///         "MyEnumName,    Property1,  Property2,      Property3",
-///         "Variant1,      standard,   (0$3.14),       A",
-///         "Variant2,      medium,     (0$9.82),       B",
+///         "Variant1,      standard,   (0$3.14),       cheap",
+///         "Variant2,      medium,     (0$9.82),       pricey",
 ///     ];
 /// 
 ///     let table_parser = TableParser::from_csv_lines(rows, "$").unwrap();
@@ -74,6 +81,12 @@ impl EnumTable {
     /// Properties will have the length of columns
     pub fn set_properties(&mut self, properties: Vec<String>) {
         self.properties = properties;
+    }
+    pub fn get_properties(&self) -> &Vec<String> {
+        &self.properties
+    }
+    pub fn get_variants(&self) -> &Vec<String> {
+        &self.variants
     }
     /// Variants will have the length of rows
     pub fn set_variants(&mut self, variants: Vec<String>) {
@@ -136,5 +149,59 @@ impl EnumTable {
         let row_idx = if var_idx.is_none() {return Err(TableError::NoVariantWithName(variant.to_string()))} else {var_idx.unwrap()};
         Ok(self.get_value_by_col_row(col_idx, row_idx)?)
     }
+    // Ok if all good, else TableError::InvalidValueForPropertyWithTypeAtRow(String, String, String, usize)
+    pub fn check_valid_values(&self) -> Result<(), TableError> {
+        if self.parsed_types.is_empty() {return Err(TableError::DataEmpty)}
+        let rtypes = &self.parsed_types;
+
+        // loop over properties
+        for i in 0..self.data.len() {
+
+            let col_data = &self.data[i];
+            let col_type = &rtypes[i];
+
+            // loop over values
+            for j in 0..col_data.len() {
+                
+                let val = &col_data[j];
+                if !col_type.value_is_valid(val) {
+                    return Err(TableError::InvalidValueForPropertyWithTypeAtRow(val.to_string(), self.properties[i].clone(), col_type.to_typestr(), j))
+                }
+            }
+        } 
+
+        Ok(())
+    }
+
+    pub fn check_all_types_const(&self) -> bool {
+        for rtype in &self.parsed_types {
+            if !rtype.is_const() {return false}
+        }
+        true
+    }
+    pub fn all_types_depth_smaller_than(&self, rhs: usize) -> bool {
+        for rtype in &self.parsed_types {
+            if rtype.get_depth(0) > rhs as usize {return false;}
+        }
+        true     
+    }
+    pub fn all_types_breadth_smaller_than(&self, rhs: usize) -> bool {
+        for rtype in &self.parsed_types {
+            if rtype.get_breadth(0) > rhs as usize {return false;}
+        }
+        true     
+    }
+
+    /// In Lieu of a fully working code_gen for all types and a config we do all here for now
+    pub fn check_valid_types_for_code(&self) -> Result<(), TableError> {
+        if self.check_all_types_const() != true {return Err(TableError::MissingFeature(String::from("Non-const types in table.")));}
+        let max_depth = 1;
+        let max_breadth = 3;
+        if !self.all_types_depth_smaller_than(max_depth) || !self.all_types_breadth_smaller_than(max_breadth) {
+            return Err(TableError::MissingFeature(String::from("Table contains to deeply nested values.")))
+        }
+        Ok(())
+    }
+
 }
 
