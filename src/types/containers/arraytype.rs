@@ -40,7 +40,7 @@ impl ArrayType {
         true
     }
 
-    pub fn wrap_valuestr(valuestr: &str, rtype: &Box<RType>, size: &usize) -> String {
+    pub fn wrap_valuestr(valuestr: &str, rtype: &Box<RType>) -> String {
         let values = NestedValueParser::parse_nested_str(valuestr, '[', true);
 
         let mut wrapped_str = String::from("[");

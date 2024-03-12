@@ -1,5 +1,5 @@
 [package]
-name = "table2enum"
+name = "csvenum"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,5 +11,5 @@ regex = "1.10.3"
 thiserror = "1.0.57"
 
 [[bin]]
-name = "main"
+name = "csvenum"
 path = "src/main.rs"

@@ -4,7 +4,7 @@ use crate::RTypeTrait;
 use super::{EnumTable, TextBlock, codeblocks::MatchBlock};
 
 /// will assume all other blocks have been generated for now
-pub fn generate_impl_block(et: &EnumTable) -> TextBlock {
+pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
     let mut tb = TextBlock::new();
 
     let enumname = et.get_name();
@@ -22,18 +22,20 @@ pub fn generate_impl_block(et: &EnumTable) -> TextBlock {
     tb.add_line_indented(linker);
     tb.close_closure(true);
     // fns for as+from_var
-    let fn_as_var = String::from("pub fn as_variant_str(&self) -> &'static str");
-    tb.add_line_indented(fn_as_var);
-    tb.open_closure(true);
-    let linker = format!("{}_as_variant_str(self)", enumname_lc);
-    tb.add_line_indented(linker);
-    tb.close_closure(true);    
-    let fn_from_var = String::from("pub fn from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<Self>");
-    tb.add_line_indented(fn_from_var);
-    tb.open_closure(true);
-    let linker = format!("{}_from_variant_str(variantstr)", enumname_lc);
-    tb.add_line_indented(linker);
-    tb.close_closure(true); 
+    if with_var_fns {
+        let fn_as_var = String::from("pub fn as_variant_str(&self) -> &'static str");
+        tb.add_line_indented(fn_as_var);
+        tb.open_closure(true);
+        let linker = format!("{}_as_variant_str(self)", enumname_lc);
+        tb.add_line_indented(linker);
+        tb.close_closure(true);    
+        let fn_from_var = String::from("pub fn from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<Self>");
+        tb.add_line_indented(fn_from_var);
+        tb.open_closure(true);
+        let linker = format!("{}_from_variant_str(variantstr)", enumname_lc);
+        tb.add_line_indented(linker);
+        tb.close_closure(true); 
+    }
     // fns for properties, will always be generated
     for col in 0..props.len() {
         let prop_name = &props[col];

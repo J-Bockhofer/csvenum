@@ -52,13 +52,3 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
     tb
 }
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_testblock() {
-
-    }
-}

@@ -4,10 +4,13 @@
 
 extern crate regex;
 extern crate clap;
+extern crate thiserror;
 //use et_error::ETError;
 
 //use properties::ConstProperty;
 pub mod parser;
+use std::path::PathBuf;
+
 pub use parser::TableParser;
 
 pub mod enumtable;
@@ -20,98 +23,76 @@ pub mod types;
 use parser::ToEnumTable;
 pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType, Reference};
 
-
+use std::env::current_dir;
 
 pub mod reader;
-use reader::{read_file_lines, write_lines_to_file};
+use reader::read_file_lines;
 
 
+pub struct EnumOptions {
+    /// The output file
+    pub path_to_outfile: PathBuf,
+    /// Whether the property declarations should be split into separate files 
+    pub split_files: bool,
 
+    /// Generate variant as & from str fns
+    pub gen_variant_str_fns: bool,
 
+    /// Pure conversion functions only or also impl links to them
+    pub gen_impl_links: bool,
 
-pub fn generate_from_csv_to_file() {
+    /// EXPERIMENTAL: Unlock const type restrictions on input table
+    pub experimental_no_type_restrictions: bool,
 
-    let lines = read_file_lines("tests_a/pisse.csv").unwrap();
-
-    let parser =  TableParser::from_csv_lines(lines, "$").unwrap();
-
-    let et = parser.to_enumtable().unwrap();
-
-    let em = EnumModule::new(&et, "tests_a/pisse.csv".to_string());
-
-    let lines = em.to_lines();
-
-
-    write_lines_to_file("tests_a/pisse.rs", lines).unwrap();    
-}
-
-
-/* #[derive(Debug)]
-pub struct Vars {
-    pub enumname: String,
-    pub variants: Vec<Variant>,
-    pub properties: Vec<ConstProperty>,
-}
-
-impl Vars {
-    pub fn new(enumname: &str, variants: Vec<Variant>, properties: Vec<ConstProperty>) -> Self {
-        Vars { enumname: enumname.to_string(), variants, properties }
-    }
-} */
-
-
-#[derive(Debug)]
-pub struct Closure {
-    pub header: String,
-    pub content: String,
+    pub multival_split_symbol: String,
 
 }
 
-/// Function to generate const variable names for the passed variantnames and properties
-/// 
-/// Table of
-/// TYPES    | &'static str | usize
-/// EnumName | property1    | property2
-/// Variant1 | Value1       | Value2
-/* pub fn make_vars(enumname: &str, variantnames: Vec<&str>, properties: Vec<&str>, types: Vec<&str>) -> Option<Vars> {
-    if properties.len() != types.len() {todo!("Log error: Types and Properties must have the same length")}
-    //let num_variants = variantnames.len();
-    let num_props = properties.len();
-    // enforce first letter caps for variant
-
-    // 1. Names for PropertyConstants - of properties.len() - FULL_CAPS
-    let mut property_constants: Vec<ConstProperty> = vec![];
-    for i in 0..num_props {
-        let property = properties[i];
-        let type_str = types[i];
-        if !property.is_ascii() {todo!("Log error: Property Name not ASCII")}
-        property_constants.push(
-            ConstProperty::from(&enumname, property, type_str)
-        );
+impl Default for EnumOptions {
+    
+    fn default() -> Self {
+        EnumOptions { 
+            path_to_outfile: current_dir().unwrap(),
+            split_files: false, 
+            gen_variant_str_fns: true, 
+            gen_impl_links: true, 
+            experimental_no_type_restrictions: false,
+            multival_split_symbol: String::from("$"),
+        }
     }
 
-    // 2. Names for Variants - of variantnames.len() - unchanged
-    let mut variant_constants: Vec<Variant> = vec![];
-    for name in variantnames {
-        variant_constants.push(Variant::new(name.to_string()));
+}
+
+impl EnumOptions {
+    pub fn from_options(path_to_outfile: String, split_files: bool, gen_variant_str_fns: bool, gen_impl_links:bool, multival_split_symbol: String) -> Self {
+        EnumOptions { path_to_outfile: PathBuf::from(path_to_outfile), split_files, gen_variant_str_fns, gen_impl_links, experimental_no_type_restrictions: false , multival_split_symbol}
     }
-
-    //println!("{:?}", &property_constants);
-    //println!("{:?}", &variant_constants);
-
-    Some(Vars::new(&enumname, variant_constants, property_constants))
-
-} */
-
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        generate_from_csv_to_file();
+    pub fn set_path_to_csv(&self, path_to_outfile: String) -> Self {
+        EnumOptions { 
+            path_to_outfile: PathBuf::from(path_to_outfile),
+            split_files: self.split_files,
+            gen_variant_str_fns: self.gen_variant_str_fns, 
+            gen_impl_links: self.gen_impl_links, 
+            experimental_no_type_restrictions: false , 
+            multival_split_symbol: self.multival_split_symbol.clone() }
     }
 }
+
+/// Main function that stages file reading, parsing, validation and code gen
+pub fn generate_configured_enum_from_csv(options: Option<EnumOptions>, path_to_csv: String) -> Result<(), Box<dyn std::error::Error>> {
+    let options = if options.is_some() {options.unwrap()} else {EnumOptions::default().set_path_to_csv(path_to_csv.clone())};
+
+    let lines = read_file_lines(&path_to_csv)?;
+
+    let parser =  TableParser::from_csv_lines(lines, &options.multival_split_symbol)?;
+
+    let et = parser.to_enumtable()?;
+
+    let mut em = EnumModule::new(&et, &options);
+
+    em.print_configured_to_file()?;
+
+    Ok(())
+}
+
 

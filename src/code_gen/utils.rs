@@ -1,6 +1,8 @@
+#[allow(dead_code)]
 pub fn pad_to_length(input: String, length: usize) -> String {
     format!("{:<width$}", input, width = length)
 }
+#[allow(dead_code)]
 pub fn leftpad_to_length(input: String, length: usize) -> String {
   format!("{:>width$}", input, width = length)
 }

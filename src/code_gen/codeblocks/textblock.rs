@@ -31,6 +31,12 @@ impl TextBlock {
             dest.push(line);
         }
     }
+    pub fn to_lines(&self) -> Vec<String> {
+        let mut lines = vec![];
+        self.collect_lines_into(&mut lines);
+        lines
+    }
+
     pub fn open_closure(&mut self, push_bracket: bool) {
         if push_bracket {
             if self.closure_depth > 0 {

@@ -23,11 +23,12 @@ impl MatchBlock {
             arms_rh: vec![],
             indent_depth: 0 }
     }
-
+    #[allow(dead_code)]
     pub fn indent_self(&mut self) {
         self.indent_self = true;
         self.indent_depth = self.indent_depth.saturating_add(1);
     }
+    #[allow(dead_code)]
     pub fn set_indent_depth(&mut self, depth: usize) {
         self.indent_depth = depth;
     }
