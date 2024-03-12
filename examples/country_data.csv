@@ -1,0 +1,14 @@
+ENUM, usize, &str, &str
+Country,country-code,name,alpha-2
+AFG,4,Afghanistan,AF
+ALA,248,Ãland Islands,AX
+ALB,8,Albania,AL
+DZA,12,Algeria,DZ
+ASM,16,American Samoa,AS
+AND,20,Andorra,AD
+AGO,24,Angola,AO
+AIA,660,Anguilla,AI
+ATA,10,Antarctica,AQ
+ATG,28,Antigua and Barbuda,AG
+ARG,32,Argentina,AR
+ARM,51,Armenia,AM

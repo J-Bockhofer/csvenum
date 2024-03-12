@@ -19,25 +19,6 @@ pub enum ParserError {
 /// 
 /// ## Example:
 /// 
-/// ```
-///     use csvenum::{TableParser, ToEnumTable};
-/// 
-///     let rows: Vec<&str> = vec![
-///         "TYPES,         &str,       (usize,f64),    &str",
-///         "MyEnumName,    Property1,  Property2,      Property3",
-///         "Variant1,      standard,   (0,3.14),       cheap",
-///         "Variant2,      medium,     (0,9.82),       pricey",
-///     ];
-/// 
-///     let table_parser = TableParser::from_csv_lines(rows);
-///     assert!(table_parser.is_ok());
-///     let enumtable = table_parser.unwrap().to_enumtable().unwrap();
-///     assert_eq!(enumtable.get_name(), "MyEnumName");
-///     let val_var1_prop2 = enumtable.get_value_by_col_row(1,0).unwrap();
-///     assert_eq!(val_var1_prop2, "(0,3.14)");
-///     
-/// 
-/// ```
 /// 
 /// TYPES,      &str,       (usize$f64)
 /// 
@@ -102,7 +83,8 @@ impl TableParser {
         let type_row = NestedValueParser::parse_nested_str(lines[type_row_idx].as_ref(), ' ', false); 
         //let type_row: Vec<String> = lines[type_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string() }).collect();
         //match type_row[0] {} == "TYPES".to_string()
-        let prop_row = NestedValueParser::parse_nested_str(lines[prop_row_idx].as_ref(), ' ', false); 
+        let prop_row: Vec<String> = NestedValueParser::parse_nested_str(lines[prop_row_idx].as_ref(), ' ', false); 
+        let prop_row: Vec<String>  = prop_row.into_iter().map(|x| {x.replace("-", "_")}).collect();
         //let prop_row: Vec<String> = lines[prop_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
         let num_cols = type_row.len();
 
@@ -131,27 +113,7 @@ impl TableParser {
     }
 
 
-
-}
-
-fn find_next_line<T: AsRef<str>>(lines: &Vec<T>, head: usize) -> Option<usize> {
-    for i in head..lines.len() {
-        if lines[i].as_ref().is_empty() {
-            continue
-        } else {
-            return Some(i);
-        }
-    }
-    None
-}
-
-
-pub trait ToEnumTable {
-    fn to_enumtable(&self) -> Result<EnumTable, Box<dyn std::error::Error>>;
-}
-
-impl ToEnumTable for TableParser {
-    fn to_enumtable(&self) -> Result<EnumTable, Box<dyn std::error::Error>> {
+    pub fn to_enumtable(&self) -> Result<EnumTable, Box<dyn std::error::Error>> {
         let mut enumtable = EnumTable::new();
         // the enumname can be found in the first column of the property row, the rest are actual properties.
         let name = &self.property_row[0];
@@ -175,7 +137,21 @@ impl ToEnumTable for TableParser {
 
         Ok(enumtable)
     }
+
+
 }
+
+fn find_next_line<T: AsRef<str>>(lines: &Vec<T>, head: usize) -> Option<usize> {
+    for i in head..lines.len() {
+        if lines[i].as_ref().is_empty() {
+            continue
+        } else {
+            return Some(i);
+        }
+    }
+    None
+}
+
 
 
 #[cfg(test)]

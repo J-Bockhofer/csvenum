@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_make_enummodule() {
-        use crate::parser::{TableParser, ToEnumTable};
+        use crate::parser::TableParser;
                                                         // if this is enum: MyEnum2 then the as_func will need to return Option<MyEnum2>
         let rows: Vec<&str> = vec![
             "TYPES,         &str,       (usize,f64),    &str",

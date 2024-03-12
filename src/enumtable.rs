@@ -173,11 +173,11 @@ impl EnumTable {
         Ok(())
     }
 
-    pub fn check_all_types_const(&self) -> bool {
+    pub fn check_all_types_const(&self) -> Result<(), TableError> {
         for rtype in &self.parsed_types {
-            if !rtype.is_const() {return false}
+            if !rtype.is_const() {return Err(TableError::MissingFeature(format!("Type: {} is non-const. Static types not implemented yet.", rtype.to_typestr())))}
         }
-        true
+        Ok(())
     }
     pub fn all_types_depth_smaller_than(&self, rhs: usize) -> bool {
         for rtype in &self.parsed_types {
@@ -194,7 +194,7 @@ impl EnumTable {
 
     /// In Lieu of a fully working code_gen for all types and a config we do all here for now
     pub fn check_valid_types_for_code(&self) -> Result<(), TableError> {
-        if self.check_all_types_const() != true {return Err(TableError::MissingFeature(String::from("Non-const types in table.")));}
+        self.check_all_types_const()?;
         let max_depth = 1;
         let max_breadth = 3;
         if !self.all_types_depth_smaller_than(max_depth) || !self.all_types_breadth_smaller_than(max_breadth) {

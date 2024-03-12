@@ -66,15 +66,17 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
 
             //const_names.push(const_name);
         }
-        pblock.add_line(String::from(""));
         frommatchb.add_arm("_".to_string(), "Option::None".to_string());
+        let from_lines = frommatchb.to_lines();
+        let as_lines = asmatchb.to_lines();
 
-        frommatchb.lines_into(&mut fromtb.lines);
-        asmatchb.lines_into(&mut astb.lines);
+        fromtb.append_lines(from_lines);
+        astb.append_lines(as_lines);
 
         fromtb.close_closure(true);
         astb.close_closure(true);
-
+        
+        pblock.add_line(String::from(""));
         astb.collect_lines_into(&mut pblock.lines);
         pblock.add_line(String::new());
         

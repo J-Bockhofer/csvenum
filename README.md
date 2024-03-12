@@ -17,7 +17,7 @@ Especially for painstakingly hand-coded, or macro-intensive libraries like [cele
 
 This file could provide users with a convenient means to append their own data and library authors with a single source of truth for their constants.
 
-You can just grab a file like [this](https://github.com/lukes/ISO-3166-Countries-with-Regional-Codes/blob/master/slim-3/slim-3.csv?plain=1), add type information and be good to go.
+You can just grab a file like [this](), add type information and be good to go.
 
 If you want to associate data with a pre-existing enum, you might want to check out [strum](https://crates.io/crates/strum) instead.
 
@@ -33,15 +33,15 @@ cargo install csvenum
 After installing, create a table like this in a `.csv`:
 
 ```
-ENUM        , &str      , usize     ,  (f64 $ f64)
+ENUM        , &str      , usize     ,  (f64 , f64)
 
 Country     , ISO3      , Numeric   ,  Lat_Lon
 
-Sweden      , SWE       , 752       ,  (60.128161 $ 18.643501)
+Sweden      , SWE       , 752       ,  (60.128161 , 18.643501)
 
-Vietnam     , VDR       , 704       ,  (14.058324 $ 108.277199)
+Vietnam     , VDR       , 704       ,  (14.058324 , 108.277199)
 
-Brazil      , BRA       , 076       ,  (-14.235004 $ -51.92528)
+Brazil      , BRA       , 076       ,  (-14.235004 , -51.92528)
 
 ```
 
@@ -157,41 +157,40 @@ Options:
 
 1. (Always) - Declaration of the enum with the given variants and doc-strings that include all properties + values
 
-2. (Option) - Variant name as and from str functions + std::fmt::Display impl that prints the name and all associated values to a string. 
+2. (Option, true) - Variant name as and from str functions + std::fmt::Display impl that prints the name and all associated values to a string. 
 
 3. (Always) - Declares property values as constants and as and from conversion function between them. You can opt to split the properties into separate files.
 
-4. (Option) - Generates an impl block for the enum that contains links to the property conversion functions, also generates a test module.
+4. (Option, true) - Generates an impl block for the enum that contains links to the property conversion functions, also generates a test module.
 
-5. (Always) - Generates a get all variants function -> [MyEnum; N_variants]
+5. (Always) - Generates a get_all_variants function -> [MyEnum; N_variants]
 
-6. ()
+
+## Known Issues
+
+1. Trailing commas in .csv - could fix but shouldnt really have them to begin with.
+
+2. Non-ASCII characters in identifiers.
 
 
 ## Future plans
 
-
-0. declare conversion fns as const? const fn number_from_repr(d: u8) -> Option<Number> {
-    Number::from_repr(d)
-}
-
-0. Need to deal with trailing commas in csv.
-
-0. Generate FromStr impl to check all associated string constants.
+0. bools
 
 0. Check u-numeric values for sign.
 
-0. check [strum](https://crates.io/crates/strum) for more trait impls
+1. Dedicated Column for Ord implementation
 
-1. Provide `OnceLock` wrappers for non-const statics.  
+2. Generate FromStr impl to check all associated string constants.
 
-2. impl custom Ord as special column of usize.
+3. Provide `OnceLock` wrappers for non-const statics.  
 
-3. Option on data for missing values.
+4. Option on data for missing values.
 
-4. BTrees and HashMaps for large datasets.
+5. BTrees and HashMaps for large datasets.
 
 Please report any issue you find or suggestion you have to further improve this tool!
+
 
 ### Why not as a macro?
 
@@ -201,9 +200,9 @@ But:
 
 Macros generate unnecessary overhead on every compilation in cases like this, where a lot of string parsing is necessary to generate the output.
 
-Having your enum statically transpiled from a .csv further lends itself to the vast tooling around csv's for data manipulation.
+Having your enum transpiled from a .csv further lends itself to the vast tooling around csv's for data manipulation.
 
 On a personal note, I find it easier having to check just a single location for data validity, rather than scattered across multiple declarations.
 
-Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it.
+Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, also one less dependancy.
 

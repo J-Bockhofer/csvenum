@@ -36,18 +36,22 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
         "let {} = {};", enumname_lc, var_name 
     ));
 
+    let mut first_iter = true;
     for prop in props {
         let prop_lc = prop.to_ascii_lowercase();
         let col_type = et.get_col_of_property(prop).unwrap();
         let col_type = &et.parsed_types[col_type];
         // recreate enumbound function
         if col_type.can_match_as_key() {
+            let res_or_enumlc = if first_iter {&enumname_lc} else {"result"};
+            first_iter = false;
             tb.add_line_indented(
-                format!("let result = {}.as_{}();", enumname_lc, prop_lc)
+                format!("let result = {}.as_{}();", res_or_enumlc, prop_lc)
                 );
             tb.add_line_indented(
                 format!("let result = {}::from_{}(result).unwrap();", enumname, prop_lc)
             );
+
         }
 
     }

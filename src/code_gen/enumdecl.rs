@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn test_make_enum_decl() {
-        use crate::parser::{TableParser, ToEnumTable};
+        use crate::parser::TableParser;
  
         let rows: Vec<&str> = vec![
             "TYPES,         &str,       (usize,f64),    &str",
