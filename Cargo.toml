@@ -12,4 +12,4 @@ thiserror = "1.0.57"
 
 [[bin]]
 name = "csvenum"
-path = "src/main.rs"
+path = "src/cli.rs"

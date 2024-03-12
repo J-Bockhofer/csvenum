@@ -117,6 +117,9 @@ impl RTypeTrait for StringType {
     fn wrap_valuestr(&self, valuestr: &str) -> String {
         format!("\"{}\"", valuestr)
     }
+    fn can_match_as_key(&self) -> bool {
+        true
+    }
 }
 
 

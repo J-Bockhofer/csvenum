@@ -202,6 +202,23 @@ impl RTypeTrait for ContainerType {
         }
     }
 
+    fn can_match_as_key(&self) -> bool {
+        match self {
+            ContainerType::Array(x, _) => {x.can_match_as_key()},
+            ContainerType::Vector(x) => {x.can_match_as_key()},
+            ContainerType::Tuple(vx) => {
+                for x in vx {
+                    // get the full breadth
+                    if !x.can_match_as_key() {
+                        return false
+                    }
+                } 
+                true
+            },
+            //_ => {todo!("Implement value wrapping for Option")}
+        }        
+    }
+
 }
 
 #[cfg(test)]

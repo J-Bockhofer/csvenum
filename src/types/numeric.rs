@@ -4,10 +4,10 @@ use std::sync::OnceLock;
 use regex::Regex;
 
 
-const NUMERIC_REGEX_STR: &'static str = r"^ ?(\d*)$"; 
+const NUMERIC_REGEX_STR: &'static str = r"^ ?-?(\d*) ?$"; 
 static NUMERIC_REGEX: OnceLock<Regex> = OnceLock::new();
 
-const FLOAT_REGEX_STR: &'static str = r"^ ?([\d\.]*)$"; 
+const FLOAT_REGEX_STR: &'static str = r"^ ?-?([\d\.]*) ?$"; 
 static FLOAT_REGEX: OnceLock<Regex> = OnceLock::new();
 
 #[allow(non_camel_case_types)]
@@ -182,5 +182,11 @@ impl RTypeTrait for NumericType {
     }
     fn wrap_valuestr(&self, valuestr: &str) -> String {
         format!("{}", valuestr)
+    }
+    fn can_match_as_key(&self) -> bool {
+        match self {
+            Self::f32 | Self::f64 => false,
+            _ => true,
+        }
     }
 }

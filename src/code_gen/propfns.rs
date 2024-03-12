@@ -77,7 +77,10 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
 
         astb.collect_lines_into(&mut pblock.lines);
         pblock.add_line(String::new());
-        fromtb.collect_lines_into(&mut pblock.lines);
+        
+        if col_type.can_match_as_key() {
+            fromtb.collect_lines_into(&mut pblock.lines);
+        }
 
         propertyblocks.push((prop_name.to_owned(), pblock));
     }

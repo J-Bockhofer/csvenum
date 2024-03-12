@@ -12,30 +12,7 @@ mod trait_impl;
 mod testblock;
 
 use std::fs;
-/// will need to convert enumtable into -> code
-/// imports (need to import Regex and, or OnceLock)
-/// Enum declaration
-/// Enum impl
-/// AsEnum trait
-/// Variable names
-/// 
-/// 
-/// If we opt to use hashmaps for lookup we need to set them in the as from methods instead of usual match arms
-/// // Create a HashMap to map from country codes to enum variants
-/// let mut code_to_country = HashMap::new();
-/// code_to_country.insert("USA", Country::USA);
-/// code_to_country.insert("CAN", Country::Canada);
-/// code_to_country.insert("MEX", Country::Mexico);
-/// 
-/// // Create a HashMap to map from enum variants to country codes
-/// let mut country_to_code = HashMap::new();
-/// for (code, country) in &code_to_country {
-///     country_to_code.insert(country, code);
-/// }
-/// 
-pub struct SHUTUP {
-    
-}
+
 
 use super::reader::write_lines_to_file;
 
@@ -140,6 +117,7 @@ impl <'a> EnumModule<'a> {
                 let prop = &prop_block.0;
                 let prop_lc = prop.to_ascii_lowercase();
                 let prop_file = format!("{}.rs", prop_lc);
+                self.imports.push(format!("mod {};", prop_lc));
                 self.imports.push(format!("use {}::*;", prop_lc));
                 let prop_file = nested_path.join(prop_file);
                 let prop_file = prop_file.to_str().unwrap();
@@ -153,6 +131,7 @@ impl <'a> EnumModule<'a> {
 
             if self.options.gen_variant_str_fns {
                 let var_file = format!("variantstr.rs");
+                self.imports.push(format!("mod variantstr;"));
                 self.imports.push(format!("use variantstr::*;"));
                 let var_file = nested_path.join(var_file);
                 let var_file = var_file.to_str().unwrap();

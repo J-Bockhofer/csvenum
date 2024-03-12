@@ -1,68 +1,143 @@
-# table2enum
-csvenum? 
+# csvenum
+
+CLI to generate Rust enums with associated constants from a csv-table. 
 
 
-## What problem is this solving?
+## Why?
+
+If you have ever needed to declare a lot of constants you will know that it may require looking at a dataset and copying the values to code.
+
+Not much fun, and LLMs still tend to have a short memory, making consistent results a challenge.
+
+So here's a code-gen to assist in creating enums with associated constants.
+
+Just declare a table in a .csv, generate and you're done.
+
+Especially for painstakingly hand-coded, or macro-intensive libraries like [celes](https://crates.io/crates/celes), it may be worthwhile to consider including a .csv file in the source code. 
+
+This file could provide users with a convenient means to append their own data.
 
 
 ## Usage
 
-Run or Add to project
+Since this crate is meant to be a tool for speeding up development, it is available as a `cargo install`.
 
-Need to be able to put enums and structures as names into table,
+```console
+cargo install csvenum
+```
 
-Structure as Enum + const declarations per property + as and from fn per property + trait as and from Enum 
+After installing, create a table like this in a `.csv`:
 
-## Todos
+```
+ENUM        , &str      , usize     ,  (f64 $ f64)
 
--1. Need to deal with trailing commas in csv
+Country     , ISO3      , Numeric   ,  Lat_Lon
 
-0. BTrees and HashMaps
+Sweden      , SWE       , 752       ,  (60.128161 $ 18.643501)
 
-1. descriptions for columns
+Vietnam     , VDR       , 704       ,  (14.058324 $ 108.277199)
 
-2. print to console [x]
+Brazil      , BRA       , 076       ,  (-14.235004 $ -51.92528)
 
-3. impl wrapper for pure/movable functions [x]
+```
 
-4. property type: Vec -> checking for duplicate values in table? [x]
+To generate the code pass the filename to the CLI. Here `countries.csv`.
 
-5. property type: Fixed array [x]
+```console
+cargo csvenum countries.csv
+```
 
-5. Check duplicate values in consts ... are okay no? it only depends on what you call the function with, if country has 108 Citizens and 108m² it is the same value but the meaning is different depending on context/ property name ... yes but if its the same property dingus lol [x]
+The generated enum will be in a file called `country.rs` in the directory of the passed `.csv`.
 
-6. Const property type: Regex, make r'' itself be a const &str that will then get passed to the regex constructor in the OnceLock (also need to cargo add regex, use regex::Regex)
+In code you can now access the values like so:
+```rust
+    let countries = Country::get_all_variants();
+    for country in countries {
+        println!("{}", country);
+        println!("{}", country.as_iso3());
+    }    
+```
 
-7. Error in return types [no]
+Will output:
 
-8. impl Ord, Eq [no Ord]
+```console
+Sweden, ISO3 = SWE , Numeric = 752 , Lat_Lon = (60.128161 , 18.643501) 
+SWE
+Vietnam, ISO3 = VDR , Numeric = 704 , Lat_Lon = (14.058324 , 108.277199) 
+VDR
+Brazil, ISO3 = BRA , Numeric = 076 , Lat_Lon = (-14.235004 , -51.92528) 
+BRA
+```
 
-9. nested containers? but then not as csv.. seems overkill.. but it will be done in the backend anyways [x] + ref and lifetime :)
-
-10. impl std::fmt::Display on the enum [x]
-
-11. Get variant as name str for free [x]
-
-12. empty line in csv [x]
-
-## Default Behaviour
-
-4 space indent.
-
-Single File
-
-1. Enum Declaration (Variants)
-
-2. Const Declaration (Property)
-
-3. Converter Functions (as_Property, from_Property)
-
-`Do not put any sensitive information in your table!`
-The compiled binary will contain all the constants in a easily readable form.
+See CLI options and the table format below for details.
 
 
-## Ideas
+## Table format
 
+A table for code-gen with `csvenum` will always have the following shape.
 
-1. Merging of modified docs
-    Simple...not: where mapping existed before, keep modification. new mapping integrate. keep all other modifications.
+- First line: Specifies the types of the column values, starting with the word `ENUM`.
+
+- Second line: Specifies the name for the enum and the column names, referred to here as properties.
+
+- Third line and after: The data.
+
+The data will have the variant names in it's first column and the associated constants in the respective property columns.
+
+Example
+
+```
+ENUM,      &str,       usize,      (f64$f64)        <-- Column types
+
+GPIOpin,    Address,    Value,      XY              <-- Enum name followed by the property names
+
+PIN0,       0x00,       42,         (3.57$4.56)     <-- Variant name and associated values
+PIN1,       0x02,       56,         (8.12$7.64)
+PIN2,       0x04,       68,         (5.84$2.75)
+
+```
+
+For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
+
+## CLI options
+
+```console
+cargo csvenum --help
+```
+
+```
+Usage: csvenum [OPTIONS] <FILENAME_CSV>
+
+Arguments:
+  <FILENAME_CSV>  Filename of the CSV file (required)
+
+Options:
+  -o, --outfile <OUTFILE>
+          Path to the output file (optional)
+  -s, --split-properties <SPLIT_PROPERTIES>
+          Whether to split property declarations into separate files (optional), defaults to: false [possible values: true, false]
+  -v, --variant-str-fns <VARIANT_STR_FNS>
+          Generate variant as & from str fns (optional), defaults to: true [possible values: true, false]
+  -i, --impl-links <IMPL_LINKS>
+          Pure conversion functions only or also impl links to them (optional), defaults to: true [possible values: true, false]
+  -m, --multival-split-symbol <MULTIVAL_SPLIT_SYMBOL>
+          Multi-value split symbol (optional), defaults to: '$'
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+```
+
+## Future plans
+
+0. Need to deal with trailing commas in csv
+
+0. Generate FromStr impl to check all associated string constants
+
+1. Provide `OnceLock` wrappers for non-const statics.  
+
+2. impl custom Ord as special column of usize.
+
+3. BTrees and HashMaps for large datasets.
+
+Please report any issue you find or suggestion you have to further improve this tool!

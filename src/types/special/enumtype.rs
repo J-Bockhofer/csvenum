@@ -37,7 +37,7 @@ impl EnumType {
         }
         false
     }
-
+    #[allow(dead_code)]
     pub fn from_value(valuestr: &str) -> Option<SpecialType> {
         let enum_re = ENUMNAME_REGEX.get_or_init(|| Regex::new(ENUMNAME_REGEX_STR).unwrap());
 

@@ -1,3 +1,5 @@
+use crate::RTypeTrait;
+
 use super::{EnumTable, TextBlock};
 
 pub fn generate_testblock(et: &EnumTable) -> TextBlock {
@@ -36,13 +38,18 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
 
     for prop in props {
         let prop_lc = prop.to_ascii_lowercase();
+        let col_type = et.get_col_of_property(prop).unwrap();
+        let col_type = &et.parsed_types[col_type];
         // recreate enumbound function
-        tb.add_line_indented(
-        format!("let result = {}.as_{}();", enumname_lc, prop_lc)
-        );
-        tb.add_line_indented(
-            format!("let result = {}::from_{}(result).unwrap();", enumname, prop_lc)
-        );
+        if col_type.can_match_as_key() {
+            tb.add_line_indented(
+                format!("let result = {}.as_{}();", enumname_lc, prop_lc)
+                );
+            tb.add_line_indented(
+                format!("let result = {}::from_{}(result).unwrap();", enumname, prop_lc)
+            );
+        }
+
     }
     tb.add_line_indented(
         format!("assert_eq!({}, result);", enumname_lc)

@@ -16,6 +16,8 @@ pub use special::SpecialType;
 mod rtypetrait;
 pub use rtypetrait::RTypeTrait;
 
+mod reference;
+pub use reference::Reference;
 
 use thiserror::Error as Error;
 
@@ -191,12 +193,6 @@ impl RTypeTrait for RType {
         Err(TypeError::RTypeUnknown(typestr.to_string()))
     }
 
-/*     fn from_valuestr<T: AsRef<str>>(valuestr: T) -> Result<Self, TypeError> where Self: Sized {
-        let mut valuestr = valuestr.as_ref();
-        
-        if let Some(specialtype) = SpecialType::from_valuestr(valuestr) {return Self::Special(Reference::None, specialtype)}
-    } */
-
     fn to_typestr(&self) -> String{
         let lifetime_pd = if self.has_lifetime() {" "} else {""}; 
 
@@ -275,6 +271,14 @@ impl RTypeTrait for RType {
         }
     }
 
+    fn can_match_as_key(&self) -> bool {
+        match self {
+            Self::String(_, x) => {x.can_match_as_key()},
+            Self::Special(_, x) => {x.can_match_as_key()},
+            Self::Numeric(_, x) => {x.can_match_as_key()},
+            Self::Container(_, x) => {x.can_match_as_key()},
+        }        
+    }
 }
 
 
@@ -283,53 +287,6 @@ impl std::fmt::Display for RType {
         write!(f, "{}", self.to_typestr())?;
         Ok(())
     }    
-}
-
-
-/// Represents a reference and lifetime
-/// Will be wrapped in an option (reference is optional in types), no!
-#[derive(Debug, Eq, PartialEq)]
-pub enum Reference {
-    WithLifetime(String),
-    Naked,
-    None,
-}
-
-impl std::fmt::Display for Reference {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let refstr = match self {
-            Reference::None => {"".to_string()},
-            Reference::Naked => {"&".to_string()},
-            Reference::WithLifetime(x) => {format!("&{}",x)},
-        };
-        write!(f, "{}", refstr)
-    }
-}
-
-impl Reference {
-    pub fn to_refstr(&self) -> String {
-        self.to_string()
-    }
-    pub fn get_lifetime(&self) -> String {
-        match self {
-            Self::WithLifetime(x) => {x.to_owned()}
-            _ => {String::new()},
-        }
-    }
-    pub fn has_lifetime(&self) -> bool {
-        match self {
-            Self::WithLifetime(_) => {true}
-            _ => {false},
-        }        
-    }
-    pub fn to_refstr_no_life(&self) -> String {
-        match self {
-            Self::None => {String::new()},
-            _ => {String::from("&")},
-
-        }
-    }
-
 }
 
 
@@ -421,15 +378,6 @@ mod tests {
         assert_eq!(expected, typestr);
         assert_eq!(4, result.get_breadth(0));
 
-
-/*         let typestr = "(Vec<&'a str>, &'b OsStr, [&'a usize, 3])".to_string();
-        let result = RType::from_typestr(&typestr).unwrap();
-        let expected = result.to_typestr();
-        assert_eq!(expected, typestr);
-        let mut into: Vec<String> = vec![];
-        result.collect_lifetimes(&mut into);
-        let expected = vec!["'a","'b","'a"];
-        assert_eq!(into, expected); */
 
     }
 

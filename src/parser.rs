@@ -79,15 +79,24 @@ impl TableParser {
     fn set_data_rows(&mut self, cols: Vec<Vec<String>>) {
         self.data_cols = cols;
     }
+    /// Parses a vector of lines
     pub fn from_csv_lines<T: AsRef<str>>(lines: Vec<T>, value_separator: &str)-> Result<Self, ParserError> {
         let mut this = TableParser::new();
-        let type_row_idx = this.type_row_idx;
-        let prop_row_idx = type_row_idx + 1;
-        let dat_row_idx = type_row_idx + 2;
-
+        // find the next non-empty row
         let num_lines = lines.len();
         if lines.is_empty() || num_lines < 3 {return Err(ParserError::TableEmptyOrShort)}
+        let head = if let Some(x) = find_next_line(&lines, 0){x} 
+                            else {return Err(ParserError::TableEmptyOrShort)};
+        let type_row_idx = head;
+        let head = if let Some(x) = find_next_line(&lines, head+1){x} 
+                            else {return Err(ParserError::TableEmptyOrShort)};        
+        let prop_row_idx = head;
+        let head = if let Some(x) = find_next_line(&lines, head+1){x} 
+                            else {return Err(ParserError::TableEmptyOrShort)}; 
+        let dat_row_idx = head;
 
+
+        // could just use the NestedValueParser here
         let type_row: Vec<String> = lines[type_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string() }).collect();
         //match type_row[0] {} == "TYPES".to_string()
 
@@ -119,6 +128,17 @@ impl TableParser {
 
 
 
+}
+
+fn find_next_line<T: AsRef<str>>(lines: &Vec<T>, head: usize) -> Option<usize> {
+    for i in head..lines.len() {
+        if lines[i].as_ref().is_empty() {
+            continue
+        } else {
+            return Some(i);
+        }
+    }
+    None
 }
 
 
@@ -153,3 +173,29 @@ impl ToEnumTable for TableParser {
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_csv_parser() {
+        let table = vec![
+            "TYPES,      &str,       usize,      (f64$f64)",
+            "GPIOpin,    Address,    Value,      XY",
+            "PIN0,       0x00,       42,         (3.57$4.56)",
+            "PIN1,       0x02,       56,         (8.12$7.64)",
+            "PIN2,       0x04,       68,         (5.84$2.75)",
+        ];
+        
+        let parser = TableParser::from_csv_lines(table, "$").unwrap();
+        println!("Types: {:?}", parser.type_row);
+        println!("Props: {:?}", parser.property_row);
+        println!("Data: {:?}", parser.data_cols);
+
+        let _et = parser.to_enumtable().unwrap();
+
+
+    }
+
+}

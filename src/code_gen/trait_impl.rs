@@ -52,15 +52,17 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
         let linker = format!("{}_as_{}(self)", &enumname_lc, prop_lc);
         tb.add_line_indented(linker);
         tb.close_closure(true); 
-        let fromfn_hdr = format!(
-            "pub fn from_{}({}: {}) -> Option<Self>", prop_lc, prop_lc, col_type.to_typestr()
-        );
-        tb.add_line_indented(fromfn_hdr);
-        tb.open_closure(true);
-        let linker = format!("{}_from_{}({})", &enumname_lc, prop_lc, prop_lc);
-        tb.add_line_indented(linker);
-        tb.close_closure(true); 
 
+        if col_type.can_match_as_key() {
+            let fromfn_hdr = format!(
+                "pub fn from_{}({}: {}) -> Option<Self>", prop_lc, prop_lc, col_type.to_typestr()
+            );
+            tb.add_line_indented(fromfn_hdr);
+            tb.open_closure(true);
+            let linker = format!("{}_from_{}({})", &enumname_lc, prop_lc, prop_lc);
+            tb.add_line_indented(linker);
+            tb.close_closure(true); 
+        }
     }    
     tb.close_closure(true);
     tb

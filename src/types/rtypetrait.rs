@@ -65,6 +65,7 @@ pub trait RTypeTrait {
     // let when const is declared
     // match self?! -> is self match in regex - is_match(haystack: &str) -> Self match haystack {haystack if enum_re.is_match() => {}, etc..}
     // fn signature, return and argument ... lifetimes...
-
+    /// Whether the type can be used as the key in a match expression, floats can not.
+    fn can_match_as_key(&self) -> bool;
 
 }

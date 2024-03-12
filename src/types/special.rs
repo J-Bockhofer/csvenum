@@ -88,8 +88,10 @@ impl RTypeTrait for SpecialType {
             Self::Regex => {
                 todo!("Impl wrapping for value of type regex with OnceLock get_or_init ...");
             }
-        }
-        
+        }  
+    }
+    fn can_match_as_key(&self) -> bool {
+        true
     }
 }
 
