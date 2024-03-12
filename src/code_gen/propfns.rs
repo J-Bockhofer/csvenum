@@ -26,7 +26,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
     
         astb.add_line(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
-            "pub fn {}_as_{}({}: &{}) -> {}{}", &enumname_lc, prop_lc, enumname_lc, enumname, typeprefix, no_ref_type
+            "pub const fn {}_as_{}({}: &{}) -> {}{}", &enumname_lc, prop_lc, enumname_lc, enumname, typeprefix, no_ref_type
         );
         astb.add_line(asfn_hdr);
         astb.open_closure(true);

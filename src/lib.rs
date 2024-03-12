@@ -181,7 +181,7 @@ pub mod code_gen;
 pub use code_gen::EnumModule;
 
 mod types;
-pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType, Reference};
+pub use types::{RType, RTypeTrait, SpecialType, StringType, NumericType, ContainerType, Reference, containers::NestedValueParser};
 
 use std::env::current_dir;
 
@@ -205,7 +205,6 @@ pub struct EnumOptions {
     /// EXPERIMENTAL: Unlock const type restrictions on input table
     pub experimental_no_type_restrictions: bool,
 
-    pub multival_split_symbol: String,
 
 }
 
@@ -218,14 +217,13 @@ impl Default for EnumOptions {
             gen_variant_str_fns: true, 
             gen_impl_links: true, 
             experimental_no_type_restrictions: false,
-            multival_split_symbol: String::from("$"),
         }
     }
 }
 
 impl EnumOptions {
-    pub fn from_options(path_to_outfile: String, split_files: bool, gen_variant_str_fns: bool, gen_impl_links:bool, multival_split_symbol: String) -> Self {
-        EnumOptions { path_to_outfile: PathBuf::from(path_to_outfile), split_files, gen_variant_str_fns, gen_impl_links, experimental_no_type_restrictions: false , multival_split_symbol}
+    pub fn from_options(path_to_outfile: String, split_files: bool, gen_variant_str_fns: bool, gen_impl_links:bool) -> Self {
+        EnumOptions { path_to_outfile: PathBuf::from(path_to_outfile), split_files, gen_variant_str_fns, gen_impl_links, experimental_no_type_restrictions: false }
     }
     pub fn set_path_to_csv(&self, path_to_outfile: String) -> Self {
         EnumOptions { 
@@ -234,7 +232,7 @@ impl EnumOptions {
             gen_variant_str_fns: self.gen_variant_str_fns, 
             gen_impl_links: self.gen_impl_links, 
             experimental_no_type_restrictions: false , 
-            multival_split_symbol: self.multival_split_symbol.clone() }
+         }
     }
 }
 
@@ -250,7 +248,7 @@ pub fn generate_configured_enum_from_csv(options: Option<EnumOptions>, path_to_c
     let lines = lines.unwrap();
 
 
-    let parser =  TableParser::from_csv_lines(lines, &options.multival_split_symbol);
+    let parser =  TableParser::from_csv_lines(lines);
     if let Err(err) = parser {
         eprintln!("Error parsing file: {}", err);
         std::process::exit(1);

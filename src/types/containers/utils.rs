@@ -2,7 +2,7 @@
 /// 
 /// (3,2,5,(3,5,6))
 /// 
-/// (3, "[\d.*,]*,*")
+/// (sadsa ,"sadsa", dsadas)
 /// 
 pub struct NestedValueParser {
     
@@ -11,7 +11,7 @@ pub struct NestedValueParser {
 impl NestedValueParser {
 
     pub fn parse_nested_str(input: &str, csymbol: char, clear_self: bool) -> Vec<String> {
-        // we start with either a value | [ | ( |  " for regex
+        // we start with either a value | [ | ( |  " for string
         let mut values = vec![];
         if input.is_empty() {return vec![]}
         let mut input = input.trim().to_string();
@@ -21,7 +21,8 @@ impl NestedValueParser {
                 c if c == csymbol => {input.remove(0); input.pop();}, // clear the value wrapper () [] "" '(' | '[' | '"'
                 _ => {},
             };
-        }
+        }     
+
         if input.is_empty() {return values}
         let mut recorded_chars = String::new();
         let mut inner_opened = false;
@@ -30,17 +31,35 @@ impl NestedValueParser {
         let mut is_escaped: bool;
         let mut num_rec_whitespaces: usize = 0;
 
+        let mut string_opened = false;
+
 
         for ch in input.chars() {
             if previous == '\\' {is_escaped = true} else {is_escaped = false}
             if ch == ',' && !inner_opened && !recorded_only_whitespace(&recorded_chars, num_rec_whitespaces) && open_cnt == 0  {
-                values.push(recorded_chars.trim().to_string());
+                // check if the segment was a string - if yes remove the quotes bc they are annoying and i dont wanna deal with them later.
+                recorded_chars = recorded_chars.trim().to_string();
+                let first = recorded_chars.chars().nth(0).unwrap();
+                if first == '"' || first == '\"' {
+                    recorded_chars.remove(0);
+                    recorded_chars.pop();
+                    recorded_chars = recorded_chars.trim().to_string();
+                }
+                values.push(recorded_chars);
                 recorded_chars = String::new();
                 num_rec_whitespaces = 0;
                 continue
             }
-            if !is_escaped {
-                if ch == '(' || ch == '[' || ch == '"' {
+            //println!("{} is escaped: {}",ch, is_escaped);
+            //let pre_two: &str = previous + ch;
+            if !is_escaped || ch == '"' {
+
+                if ch == '"' || ch == '\"' {
+                    string_opened = !string_opened;
+                }
+
+                if ch == '(' || ch == '[' || (string_opened && (ch == '"' || ch == '\"')) {
+                    //println!("Opening closure");
                     open_cnt = open_cnt.saturating_add(1);
                     inner_opened = true;
                     // We have opened a new inner, check if an inner already exists, then we will treat it as part of the same valuestr
@@ -54,7 +73,8 @@ impl NestedValueParser {
                         num_rec_whitespaces = 0;
                     } 
                 }
-                if ch == ')' || ch == ']' || ch == '"' {
+                if ch == ')' || ch == ']' || (!string_opened && (ch == '"' || ch == '\"')) {
+                    //println!("Closing closure");
                     open_cnt = open_cnt.saturating_sub(1);
                     inner_opened = false;
                 }
@@ -66,7 +86,15 @@ impl NestedValueParser {
             recorded_chars.push(ch);
         }
         if !recorded_chars.is_empty() && !recorded_only_whitespace(&recorded_chars, num_rec_whitespaces) {
-            values.push(recorded_chars.trim().to_string());
+            recorded_chars = recorded_chars.trim().to_string();
+            let first = recorded_chars.chars().nth(0).unwrap();
+            if first == '"' || first == '\"' {
+                recorded_chars.remove(0);
+                recorded_chars.pop();
+                recorded_chars = recorded_chars.trim().to_string();
+            }
+
+            values.push(recorded_chars);
         }        
         //println!("{:?}", values);
         values
@@ -129,5 +157,15 @@ mod tests {
         let expected: Vec<&str> = vec!["(usize, usize)", "usize", "[usize; 3]"];
         assert_eq!(expected, result);
     }
+    #[test]
+    fn test_parsed_nested_string() {
+
+        let input = "3 , 2 , \"5 , (3,5,6) \", 6 ";
+        let result = NestedValueParser::parse_nested_str(input, '\"', true);
+        let expected: Vec<&str> = vec!["3","2","5 , (3,5,6)", "6"];
+        assert_eq!(expected, result);
+
+    }
+
 
 }

@@ -200,13 +200,13 @@ mod tests {
         use crate::parser::{TableParser, ToEnumTable};
                                                         // if this is enum: MyEnum2 then the as_func will need to return Option<MyEnum2>
         let rows: Vec<&str> = vec![
-            "TYPES,         &str,       (usize$f64),    &str",
+            "TYPES,         &str,       (usize,f64),    &str",
             "MyEnumName,    Property1,  Property2,      Property3",
-            "Variant1,      standard,   (0$ 3.14),      cheap",
-            "Variant2,      medium,     (0$ 9.82),      pricey",
+            "Variant1,      standard,   (0, 3.14),      cheap",
+            "Variant2,      medium,     (0, 9.82),      pricey",
         ];
  
-        let table_parser = TableParser::from_csv_lines(rows, "$").unwrap();
+        let table_parser = TableParser::from_csv_lines(rows).unwrap();
         let enumtable = table_parser.to_enumtable().unwrap();
         assert_eq!(enumtable.get_col_of_property("Property1"), Some(0));
 

@@ -34,9 +34,6 @@ struct Cli {
     #[arg(long)]
     experimental_no_type_restrictions: Option<bool>, */
 
-    /// Delimiter for nested values, defaults to: '$'
-    #[arg(short,long)]
-    delimiter_for_nested_values: Option<char>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -47,7 +44,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let split_files = args.split_properties.unwrap_or_else(|| false);
     let gen_variant_str_fns = args.variant_str_fns.unwrap_or_else(|| true);
     let gen_impl_links = args.impl_links.unwrap_or_else(|| true);
-    let multival_split_symbol = args.delimiter_for_nested_values.unwrap_or_else(|| '$').to_string(); // Default to "$"
     //let experimental_no_type_restrictions = args.experimental_no_type_restrictions.unwrap_or_else(|| false);
 
     // Construct the EnumOptions struct
@@ -57,7 +53,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         gen_variant_str_fns,
         gen_impl_links,
         experimental_no_type_restrictions: false,
-        multival_split_symbol, 
     };
     generate_configured_enum_from_csv(Some(options), csv)?;
     

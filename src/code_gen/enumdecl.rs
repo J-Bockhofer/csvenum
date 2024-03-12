@@ -57,7 +57,7 @@ pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
     tb.add_line(String::from("];"));
 
     // declare the function
-    let fn_decl = format!("pub fn {}_get_all_variants() -> [{}; {}]", enumname_lc, enumname, variants.len());
+    let fn_decl = format!("pub const fn {}_get_all_variants() -> [{}; {}]", enumname_lc, enumname, variants.len());
     tb.add_line(fn_decl);
     tb.open_closure(true);
     tb.add_line_indented(String::from(const_varname));
@@ -92,7 +92,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
 
     // make matching functions
     tb.add_line(format!("/// Returns the variants name as a &str."));
-    let fn_decl = format!("pub fn {}_as_variant_str({}: &{}) -> &'static str", enumname_lc, enumname_lc, enumname);
+    let fn_decl = format!("pub const fn {}_as_variant_str({}: &{}) -> &'static str", enumname_lc, enumname_lc, enumname);
     tb.add_line(fn_decl);
     tb.open_closure(true);
     let matchblock = MatchBlock::from_keys(enumname_lc.clone(), var_names.clone(), const_names.clone(), true);
@@ -126,13 +126,13 @@ mod tests {
         use crate::parser::{TableParser, ToEnumTable};
  
         let rows: Vec<&str> = vec![
-            "TYPES,         &str,       (usize$f64),    &str",
+            "TYPES,         &str,       (usize,f64),    &str",
             "MyEnumName,    Property1,  Property2,      Property3",
-            "Variant1,      standard,   (0$ 3.14),      cheap",
-            "Variant2,      medium,     (0$ 9.82),      pricey",
+            "Variant1,      standard,   (0, 3.14),      cheap",
+            "Variant2,      medium,     (0, 9.82),      pricey",
         ];
  
-        let table_parser = TableParser::from_csv_lines(rows, "$").unwrap();
+        let table_parser = TableParser::from_csv_lines(rows).unwrap();
         let enumtable = table_parser.to_enumtable().unwrap();
         assert_eq!(enumtable.get_col_of_property("Property1"), Some(0));
 

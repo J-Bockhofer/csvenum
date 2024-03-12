@@ -6,8 +6,8 @@ description = "Codegen for enums with associated constants"
 documentation = "https://docs.rs/csvenum"
 repository = "https://github.com/J-Bockhofer/csvenum"
 license = "MIT"
-keywords = ["eeg", "BrainVision"]
-categories = ["science::neuroscience","parsing", "parser-implementations"]
+keywords = ["CLI", "csv", "enum", "codegen", "metaprogramming" ]
+categories = ["command-line-utilities","parsing", "parser-implementations"]
 readme = "README.md"
 
 
@@ -17,6 +17,9 @@ readme = "README.md"
 clap = { version = "4.5.2", features = ["derive"] }
 regex = "1.10.3"
 thiserror = "1.0.57"
+
+[dev-dependencies]
+criterion = "0.5.1"
 
 [[bin]]
 name = "csvenum"

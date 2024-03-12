@@ -15,8 +15,11 @@ Just declare a table in a .csv, generate and you're done.
 
 Especially for painstakingly hand-coded, or macro-intensive libraries like [celes](https://crates.io/crates/celes), it may be worthwhile to consider including a .csv file in the source code. 
 
-This file could provide users with a convenient means to append their own data.
+This file could provide users with a convenient means to append their own data and library authors with a single source of truth for their constants.
 
+You can just grab a file like [this](https://github.com/lukes/ISO-3166-Countries-with-Regional-Codes/blob/master/slim-3/slim-3.csv?plain=1), add type information and be good to go.
+
+If you want to associate data with a pre-existing enum, you might want to check out [strum](https://crates.io/crates/strum) instead.
 
 # Usage
 
@@ -78,8 +81,7 @@ BRA
 ```
 
 
-See CLI options and the table format below for details.
-
+See the table format, CLI options and the list of features below for details.
 
 
 ## Table format
@@ -97,23 +99,24 @@ The data will be rows, starting with the variant name, followed by the values pe
 Example
 
 ```
-ENUM,      &str,       usize,      (f64$f64)        <-- Column types
+ENUM,      &str,       usize,      (f64,f64)        <-- Column types
 
 GPIOpin,    Address,    Value,      XY              <-- Enum name followed by the property names
 
-PIN0,       0x00,       42,         (3.57$4.56)     <-- Variant name and associated values
-PIN1,       0x02,       56,         (8.12$7.64)
-PIN2,       0x04,       68,         (5.84$2.75)
+PIN0,       0x00,       42,         (3.57,4.56)     <-- Variant name and associated values
+PIN1,       0x02,       56,         (8.12,7.64)
+PIN2,       0x04,       68,         (5.84,2.75)
 
 ```
 
-Note that nested values are delimited by a `$`. If you don't already drive a Lamborghini you can switch it to a `¢`.
+Note that you can use commas in nested fields when they are enclosed with the appropiate symbol.
 
-When changing the delimiter pass the -d flag to the executable followed by your delimiter:
+- Strings : `""`
 
-```
-cargo csvenum gpio_config.csv -d ¢
-```
+- Tuples : `()`
+
+- Array : `[]`
+
 
 For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
 
@@ -144,21 +147,41 @@ Options:
           Generate variant as & from str fns , defaults to: true [possible values: true, false]
   -i, --impl-links 
           Pure conversion functions only or also impl links to them, defaults to: true [possible values: true, false]
-  -d, --delimiter-for-nested-values 
-          Delimiter for nested values, defaults to: '$'
   -h, --help
           Print help
   -V, --version
           Print version
 ```
 
+## Features
+
+1. (Always) - Declaration of the enum with the given variants and doc-strings that include all properties + values
+
+2. (Option) - Variant name as and from str functions + std::fmt::Display impl that prints the name and all associated values to a string. 
+
+3. (Always) - Declares property values as constants and as and from conversion function between them. You can opt to split the properties into separate files.
+
+4. (Option) - Generates an impl block for the enum that contains links to the property conversion functions, also generates a test module.
+
+5. (Always) - Generates a get all variants function -> [MyEnum; N_variants]
+
+6. ()
+
+
 ## Future plans
+
+
+0. declare conversion fns as const? const fn number_from_repr(d: u8) -> Option<Number> {
+    Number::from_repr(d)
+}
 
 0. Need to deal with trailing commas in csv.
 
 0. Generate FromStr impl to check all associated string constants.
 
 0. Check u-numeric values for sign.
+
+0. check [strum](https://crates.io/crates/strum) for more trait impls
 
 1. Provide `OnceLock` wrappers for non-const statics.  
 
@@ -169,3 +192,18 @@ Options:
 4. BTrees and HashMaps for large datasets.
 
 Please report any issue you find or suggestion you have to further improve this tool!
+
+### Why not as a macro?
+
+Simple: I dont know macros well enough to pull this off, before this project I didn't even know what an AST was.
+
+But:
+
+Macros generate unnecessary overhead on every compilation in cases like this, where a lot of string parsing is necessary to generate the output.
+
+Having your enum statically transpiled from a .csv further lends itself to the vast tooling around csv's for data manipulation.
+
+On a personal note, I find it easier having to check just a single location for data validity, rather than scattered across multiple declarations.
+
+Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it.
+

@@ -3,6 +3,8 @@ use thiserror::Error as Error;
 
 use super::enumtable::EnumTable;
 
+use super::NestedValueParser;
+
 #[derive(Error, Debug, PartialEq)]
 pub enum ParserError {
     #[error("Parsed table needs to have at least 3 lines.")]
@@ -21,13 +23,13 @@ pub enum ParserError {
 ///     use csvenum::{TableParser, ToEnumTable};
 /// 
 ///     let rows: Vec<&str> = vec![
-///         "TYPES,         &str,       (usize$f64),    &str",
+///         "TYPES,         &str,       (usize,f64),    &str",
 ///         "MyEnumName,    Property1,  Property2,      Property3",
-///         "Variant1,      standard,   (0$3.14),       cheap",
-///         "Variant2,      medium,     (0$9.82),       pricey",
+///         "Variant1,      standard,   (0,3.14),       cheap",
+///         "Variant2,      medium,     (0,9.82),       pricey",
 ///     ];
 /// 
-///     let table_parser = TableParser::from_csv_lines(rows, "$");
+///     let table_parser = TableParser::from_csv_lines(rows);
 ///     assert!(table_parser.is_ok());
 ///     let enumtable = table_parser.unwrap().to_enumtable().unwrap();
 ///     assert_eq!(enumtable.get_name(), "MyEnumName");
@@ -80,7 +82,7 @@ impl TableParser {
         self.data_cols = cols;
     }
     /// Parses a vector of lines
-    pub fn from_csv_lines<T: AsRef<str>>(lines: Vec<T>, value_separator: &str)-> Result<Self, ParserError> {
+    pub fn from_csv_lines<T: AsRef<str>>(lines: Vec<T>)-> Result<Self, ParserError> {
         let mut this = TableParser::new();
         // find the next non-empty row
         let num_lines = lines.len();
@@ -97,10 +99,11 @@ impl TableParser {
 
 
         // could just use the NestedValueParser here
-        let type_row: Vec<String> = lines[type_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string() }).collect();
+        let type_row = NestedValueParser::parse_nested_str(lines[type_row_idx].as_ref(), ' ', false); 
+        //let type_row: Vec<String> = lines[type_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string() }).collect();
         //match type_row[0] {} == "TYPES".to_string()
-
-        let prop_row: Vec<String> = lines[prop_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
+        let prop_row = NestedValueParser::parse_nested_str(lines[prop_row_idx].as_ref(), ' ', false); 
+        //let prop_row: Vec<String> = lines[prop_row_idx].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
         let num_cols = type_row.len();
 
         if num_cols != prop_row.len() {return Err(ParserError::TableHeaderMismatch(num_cols, prop_row.len()))}
@@ -113,7 +116,8 @@ impl TableParser {
         }
         for row in dat_row_idx..num_lines {
             if lines[row].as_ref().is_empty() {continue}
-            let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
+            let line = NestedValueParser::parse_nested_str(lines[row].as_ref(), '\"', true);
+            //let line: Vec<String> = lines[row].as_ref().split(',').map(|x|{x.replace("\"", " ").replace(value_separator, ",").trim().to_string()}).collect();
             if line.len() != num_cols {return Err(ParserError::TableDataMismatch(num_cols, line.len(), row))}
             for col in 0..num_cols {
                 data[col].push(line[col].clone());
@@ -181,14 +185,14 @@ mod tests {
     #[test]
     fn test_csv_parser() {
         let table = vec![
-            "TYPES,      &str,       usize,      (f64$f64)",
+            "TYPES,      &str,       usize,      (f64,f64)",
             "GPIOpin,    Address,    Value,      XY",
-            "PIN0,       0x00,       42,         (3.57$4.56)",
-            "PIN1,       0x02,       56,         (8.12$7.64)",
-            "PIN2,       0x04,       68,         (5.84$2.75)",
+            "PIN0,       0x00,       42,         (3.57,4.56)",
+            "PIN1,       0x02,       56,         (8.12,7.64)",
+            "PIN2,       0x04,       68,         (5.84,2.75)",
         ];
         
-        let parser = TableParser::from_csv_lines(table, "$").unwrap();
+        let parser = TableParser::from_csv_lines(table).unwrap();
         println!("Types: {:?}", parser.type_row);
         println!("Props: {:?}", parser.property_row);
         println!("Data: {:?}", parser.data_cols);
