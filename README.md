@@ -9,7 +9,7 @@ If you have ever needed to declare a lot of constants you will know that it may 
 
 Not much fun, and LLMs still tend to have a short memory, making consistent results a challenge.
 
-So here's a code-gen to assist in creating enums with associated constants.
+So here's a code-gen to assist in creating enums with associated constants. Like route or query parameter bindings for an API.
 
 Just declare a table in a .csv, generate and you're done.
 
@@ -18,13 +18,14 @@ Especially for painstakingly hand-coded, or macro-intensive libraries like [cele
 This file could provide users with a convenient means to append their own data.
 
 
-## Usage
+# Usage
 
-Since this crate is meant to be a tool for speeding up development, it is available as a `cargo install`.
+Since this crate is meant to be a tool for speeding up Rust development, it is available as a `cargo install`.
 
 ```console
 cargo install csvenum
 ```
+
 
 After installing, create a table like this in a `.csv`:
 
@@ -41,15 +42,20 @@ Brazil      , BRA       , 076       ,  (-14.235004 $ -51.92528)
 
 ```
 
+
 To generate the code pass the filename to the CLI. Here `countries.csv`.
+
 
 ```console
 cargo csvenum countries.csv
 ```
 
+
 The generated enum will be in a file called `country.rs` in the directory of the passed `.csv`.
 
+
 In code you can now access the values like so:
+
 ```rust
     let countries = Country::get_all_variants();
     for country in countries {
@@ -58,7 +64,9 @@ In code you can now access the values like so:
     }    
 ```
 
+
 Will output:
+
 
 ```console
 Sweden, ISO3 = SWE , Numeric = 752 , Lat_Lon = (60.128161 , 18.643501) 
@@ -69,7 +77,9 @@ Brazil, ISO3 = BRA , Numeric = 076 , Lat_Lon = (-14.235004 , -51.92528)
 BRA
 ```
 
+
 See CLI options and the table format below for details.
+
 
 
 ## Table format
@@ -82,7 +92,7 @@ A table for code-gen with `csvenum` will always have the following shape.
 
 - Third line and after: The data.
 
-The data will have the variant names in it's first column and the associated constants in the respective property columns.
+The data will be rows, starting with the variant name, followed by the values per property.
 
 Example
 
@@ -99,6 +109,10 @@ PIN2,       0x04,       68,         (5.84$2.75)
 
 For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
 
+Also there is an arbitrary but reasonable limit on value nesting depth to avoid headaches.
+
+Note that property names will have to follow valid 
+
 ## CLI options
 
 ```console
@@ -112,15 +126,15 @@ Arguments:
   <FILENAME_CSV>  Filename of the CSV file (required)
 
 Options:
-  -o, --outfile <OUTFILE>
+  -o, --outfile 
           Path to the output file (optional)
-  -s, --split-properties <SPLIT_PROPERTIES>
+  -s, --split-properties 
           Whether to split property declarations into separate files (optional), defaults to: false [possible values: true, false]
-  -v, --variant-str-fns <VARIANT_STR_FNS>
+  -v, --variant-str-fns 
           Generate variant as & from str fns (optional), defaults to: true [possible values: true, false]
-  -i, --impl-links <IMPL_LINKS>
+  -i, --impl-links 
           Pure conversion functions only or also impl links to them (optional), defaults to: true [possible values: true, false]
-  -m, --multival-split-symbol <MULTIVAL_SPLIT_SYMBOL>
+  -m, --multival-split-symbol
           Multi-value split symbol (optional), defaults to: '$'
   -h, --help
           Print help
@@ -130,14 +144,18 @@ Options:
 
 ## Future plans
 
-0. Need to deal with trailing commas in csv
+0. Need to deal with trailing commas in csv.
 
-0. Generate FromStr impl to check all associated string constants
+0. Generate FromStr impl to check all associated string constants.
+
+0. Check u-numeric values for sign.
 
 1. Provide `OnceLock` wrappers for non-const statics.  
 
 2. impl custom Ord as special column of usize.
 
-3. BTrees and HashMaps for large datasets.
+3. Option on data for missing values.
+
+4. BTrees and HashMaps for large datasets.
 
 Please report any issue you find or suggestion you have to further improve this tool!
