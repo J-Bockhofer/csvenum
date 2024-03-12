@@ -107,6 +107,14 @@ PIN2,       0x04,       68,         (5.84$2.75)
 
 ```
 
+Note that nested values are delimited by a `$`. If you don't already drive a Lamborghini you can switch it to a `¢`.
+
+When changing the delimiter pass the -d flag to the executable followed by your delimiter:
+
+```
+cargo csvenum gpio_config.csv -d ¢
+```
+
 For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
 
 Also there is an arbitrary but reasonable limit on value nesting depth to avoid headaches.
@@ -120,6 +128,8 @@ cargo csvenum --help
 ```
 
 ```
+Codegen for enums with associated constants
+
 Usage: csvenum [OPTIONS] <FILENAME_CSV>
 
 Arguments:
@@ -127,15 +137,15 @@ Arguments:
 
 Options:
   -o, --outfile 
-          Path to the output file (optional)
+          Path to the output file
   -s, --split-properties 
-          Whether to split property declarations into separate files (optional), defaults to: false [possible values: true, false]
+          Whether to split property declarations into separate files, defaults to: false [possible values: true, false]
   -v, --variant-str-fns 
-          Generate variant as & from str fns (optional), defaults to: true [possible values: true, false]
+          Generate variant as & from str fns , defaults to: true [possible values: true, false]
   -i, --impl-links 
-          Pure conversion functions only or also impl links to them (optional), defaults to: true [possible values: true, false]
-  -m, --multival-split-symbol
-          Multi-value split symbol (optional), defaults to: '$'
+          Pure conversion functions only or also impl links to them, defaults to: true [possible values: true, false]
+  -d, --delimiter-for-nested-values 
+          Delimiter for nested values, defaults to: '$'
   -h, --help
           Print help
   -V, --version

@@ -18,7 +18,7 @@ pub enum ParserError {
 /// ## Example:
 /// 
 /// ```
-///     use csvenum::parser::{TableParser, ToEnumTable};
+///     use csvenum::{TableParser, ToEnumTable};
 /// 
 ///     let rows: Vec<&str> = vec![
 ///         "TYPES,         &str,       (usize$f64),    &str",
