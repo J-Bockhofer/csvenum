@@ -4,7 +4,7 @@
 //! 
 //! The following is meant for internal reference and the curious minded.
 //! 
-//! `If you are looking to generate enums from a csv, refer to the Usage section of the [readme]()`
+//! `If you are looking to generate enums from a csv, refer to the Usage section of the [readme](https://github.com/J-Bockhofer/csvenum)`
 //! 
 //! 
 //! ## Structure
@@ -23,7 +23,7 @@
 //! 
 //! ```rust
 //!
-//!     use csvenum::{TableParser};
+//!     use csvenum::TableParser;
 //! 
 //!     let rows: Vec<&str> = vec![
 //!         "TYPES,         &str,       (usize,f64),    bool",

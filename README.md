@@ -1,5 +1,7 @@
 # csvenum
 
+[Docs](https://docs.rs/csvenum)
+
 CLI to generate Rust enums with associated constants from a csv-table. 
 
 

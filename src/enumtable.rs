@@ -32,7 +32,7 @@ use crate::{RType, RTypeTrait};
 /// ## Example:
 /// 
 /// ```
-///     use csvenum::{TableParser};
+///     use csvenum::TableParser;
 /// 
 ///     let rows: Vec<&str> = vec![
 ///         "TYPES,         &str,       (usize,f64),    &str",
