@@ -1,4 +1,4 @@
-///! Convert Types passed as a string to more useful representations for code gen.
+///! Convert Types passed as a string to more useful representation for code gen.
 ///! Allows for specifying "&str" in a textfile to generate associated representations in function signatures and expressions. 
 ///!
 pub mod numeric;
@@ -77,14 +77,24 @@ static REFLIFETIME_REGEX: OnceLock<Regex> = OnceLock::new();
 
 /// Rust Type primitive (no value or name attached, except for enum), has functions for:
 /// 
-/// - constructing itself from a given string
+/// - constructing itself from a given string that should contain type information.
 /// 
-/// - format to different representations type in fn arg, return value, const/static, 
+/// - validation of values. 
 /// 
-/// Excludes:
-/// Result
-/// Option
-/// Error
+/// - gathering of information (can be const, has lifetimes, etc.). 
+/// 
+/// - formatting passed values.
+/// 
+/// Its variants contain the actual type and an optional [Reference]
+/// 
+/// Numeric -> [NumericType]
+/// 
+/// String -> [StringType]
+/// 
+/// Container -> [ContainerType]
+/// 
+/// Special -> [SpecialType]
+/// 
 #[derive(Debug, Eq, PartialEq)]
 pub enum RType {
     /// Any Numeric Type
@@ -140,6 +150,7 @@ impl RType {
 }
 
 impl RTypeTrait for RType {
+    /// Call this function to parse the complete type information from a string representation
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
         let mut typestr = typestr.as_ref().trim(); // may be changed when a lifetime is obtained.
         // first we need to look if one of our regex matches

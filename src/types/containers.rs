@@ -26,11 +26,9 @@ pub static ARRAY_REGEX: OnceLock<Regex> = OnceLock::new();
 pub const TUPLE_REGEX_STR: &'static str = r"^\( ?(.+) ?\)";
 pub static TUPLE_REGEX: OnceLock<Regex> = OnceLock::new();
 
-// types that are parsed from some text content and will be turned into code, will include helper functions
-/// Containers with single type T
+/// Represents a container, like Vec<T>, Array \[T; N\] and Tuple(T,R)
 /// 
-/// Hash Map would need a value, but it would be possible to make a default hashmap constructor function from property1 K to property2 V
-/// 
+/// Contains more [RType]s
 #[derive(Debug, Eq, PartialEq)]
 pub enum ContainerType {
     Vector(Box<RType>),
@@ -38,7 +36,6 @@ pub enum ContainerType {
     Array(Box<RType>, usize),
     //HashSet(Box<RType>),
     //HashMap(Box<RType>, Box<RType>),
-
 }
 
 impl RTypeTrait for ContainerType {

@@ -1,5 +1,8 @@
+//! Small module for IO operations
+
 use std::fs::File;
 use std::io::{BufRead, BufReader, Result, Write};
+
 pub fn read_file_lines(file_path: &str) -> Result<Vec<String>> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);

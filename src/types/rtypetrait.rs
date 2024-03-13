@@ -1,47 +1,27 @@
 use super::TypeError;
 
+/// Trait to simplify handling types 
 pub trait RTypeTrait {
     /// Construct the RType from a string that contains type information i.e. " &str " 
     /// 
     /// -> will return RType::String(Reference::Naked, StringType::str)
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized;
-    /// Construct RType from value representation i.e. "[[3,3],[3,3],[3,3]]" and self as the type hint bc this is getting messy
-    /// 
-    /// -> will return RType::Container(Reference::None, ContainerType::Array( 
-    ///             Box::new(RType::Container(Reference::None, ContainerType::Array(
-    ///                 Box::new(RType::Numeric(NumericType::usize)), 2)
-    ///             ), 3))
-    /// fn new_from_valuestr<T: AsRef<str>>(&self, valuestr: T) -> Result<Self, TypeError> where Self: Sized;
     /// Conversions into type representation
     /// 
     /// Example input: `&'a str`
     /// 
-    /// 1. get normal representation `&'a str`
+    /// get normal representation `&'a str`
     fn to_typestr(&self) -> String;
-    /// 2. get representation without references or lifetimes `str`
+    /// get representation without references or lifetimes `str`
     fn to_typestr_no_ref(&self) -> String;
-    /// 3. get representation without lifetime `&str`
+    /// get representation without lifetime `&str`
     fn to_typestr_no_life(&self) -> String;
-    /// 4. collect lifetimes
+    /// collect lifetimes
     fn collect_lifetimes(&self, into: &mut Vec<String>);
     // to typestr const?
     /// Get nesting depth
-    /// String = depth 0
-    /// Vec<String> = depth 1
-    /// Vec<Vec<String>> = depth 2
-    /// [String; 3] = depth 1
-    /// [[String; 3]; 3] = depth 2
-    /// (usize, usize) = depth 1
-    /// (Vec<Vec<String>>, [String; 3]) = depth 3
     fn get_depth(&self, counter: usize) -> usize;
-    /// Get nesting breadth - only for tuple breadth
-    /// String = breadth 0
-    /// Vec<String> = breadth ? 0 String
-    /// Vec<Vec<String>> = breadth ? 0 Vec<String>
-    /// [String; 3] = breadth 0
-    /// [[String; 3]; 3] = breadth 0
-    /// (usize, usize) = breadth 2
-    /// (Vec<Vec<String>>, [String; 3]) = breadth 2
+    /// Get nesting breadth
     fn get_breadth(&self, counter: usize) -> usize;
 
     // Declarations... TypeWrapper ? as Vector again? vector and tuple declaration in text as [value1, value2, value3] with vec! for vectors.

@@ -76,7 +76,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
     
                 //const_names.push(const_name);
             }
-            frommatchb.add_arm("_".to_string(), "Option::None".to_string());
+            frommatchb.add_arm("_", "Option::None");
         } else {
             // we need to iterate over duplicate values
             let mut grp_cnt = 0;
@@ -100,7 +100,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                 grp_cnt += 1;
 
             }
-            frommatchb.add_arm("_".to_string(), "vec![]".to_string());
+            frommatchb.add_arm("_", "vec![]");
             for row in 0..vars.len() {
                 let var_name = &vars[row];
                 let valstr = &et.get_value_by_col_row(col, row).unwrap();

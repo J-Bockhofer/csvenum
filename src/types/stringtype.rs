@@ -1,7 +1,7 @@
 
 use super::{TypeError, RTypeTrait};
 
-/// each type will have two things in their tuple (last two entries) first: bool isReference, second: String specified lifetime... i want to leave that for later aarrgh
+/// Represents known string types
 #[allow(non_camel_case_types)]
 #[derive(Debug, Eq, PartialEq)]
 pub enum StringType {

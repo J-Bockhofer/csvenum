@@ -1,15 +1,11 @@
-/// [3,3,3,[3,3,3,3]]
-/// 
-/// (3,2,5,(3,5,6))
-/// 
-/// (sadsa ,"sadsa", dsadas)
-/// 
+/// Namespace container that holds the function to parse strings with nested values into a vector of values.
 pub struct NestedValueParser {
     
 }
 
 impl NestedValueParser {
 
+    /// Walks through the string and checks for opening and closing value wrappers to identify comma separated values.
     pub fn parse_nested_str(input: &str, csymbol: char, clear_self: bool) -> Vec<String> {
         // we start with either a value | [ | ( |  " for string
         let mut values = vec![];

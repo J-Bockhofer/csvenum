@@ -1,6 +1,6 @@
 
 mod codeblocks;
-use codeblocks::TextBlock;
+pub use codeblocks::{TextBlock, MatchBlock};
 mod enumdecl;
 
 mod propfns;
@@ -23,7 +23,7 @@ use self::propfns::generate_property_fns;
 use self::testblock::generate_testblock;
 use self::trait_impl::{generate_impl_block, generate_impl_fmt_display};
 
-use super::enumtable::EnumTable;
+use super::EnumTable;
 
 use super::EnumOptions;
 

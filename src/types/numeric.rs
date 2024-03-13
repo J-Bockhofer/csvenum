@@ -11,7 +11,7 @@ static NUMERIC_REGEX: OnceLock<Regex> = OnceLock::new();
 
 const FLOAT_REGEX_STR: &'static str = r"^ ?-?([\d\.]*) ?$"; 
 static FLOAT_REGEX: OnceLock<Regex> = OnceLock::new();
-
+/// Represents all numeric types
 #[allow(non_camel_case_types)]
 #[derive(Debug, Eq, PartialEq)]
 pub enum NumericType {

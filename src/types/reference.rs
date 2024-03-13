@@ -1,6 +1,5 @@
 
-/// Represents a reference and lifetime
-/// Will be wrapped in an option (reference is optional in types), no!
+/// Represents a reference `&` and lifetime `<'a>`
 #[derive(Debug, Eq, PartialEq)]
 pub enum Reference {
     WithLifetime(String),

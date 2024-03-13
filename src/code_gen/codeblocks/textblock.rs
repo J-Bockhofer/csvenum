@@ -4,6 +4,26 @@ use super::indent_string;
 
 const TABWIDTH: usize = 4;
 
+/// Struct that contains text... well, what did you expect?
+/// 
+/// Handles indentation and closures.
+/// 
+/// ```
+///     use csvenum::code_gen::{TextBlock, MatchBlock};    
+///     
+///     let mut tb = TextBlock::new();
+///     tb.add_line("use csvenum::RType;");
+///     tb.add_line("pub fn match_rtype(rtype: RType) {");
+///     tb.open_closure(false);
+///     let mut mb = MatchBlock::new("rtype", false);
+///     mb.add_arm("RType::String(_)", "panic!(\"It's a string!\")");
+///     mb.add_arm("_", "println!(\" Just a normal type \")");
+///     tb.append_lines(mb.to_lines());
+///     tb.close_closure(true);
+///   
+///     println!("{}", tb);
+/// 
+/// ```
 #[derive(Debug)]
 pub struct TextBlock {
     pub lines: Vec<String>,

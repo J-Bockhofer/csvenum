@@ -16,18 +16,6 @@ pub enum ParserError {
 }
 
 /// Parses a Vec<&str> with CSV to an intermediate representation
-/// 
-/// ## Example:
-/// 
-/// 
-/// TYPES,      &str,       (usize$f64)
-/// 
-/// EnumName,   Property1,  Property2    
-/// 
-/// Variant1,   asdfg,      (12$ 3.14)
-/// 
-/// Variant2,   eghad,      (38$ 9.81)
-///  If parsed thing is enum -> Declaration in csv should be "enum: E" should yield in return E and E::A in match
 #[derive(Debug)]
 pub struct TableParser {
 
@@ -177,12 +165,6 @@ mod tests {
         println!("Data: {:?}", parser.data_cols);
 
         let _et = parser.to_enumtable().unwrap();
-
-
-    }
-    #[test]
-    fn test_rnd() {
-
 
 
     }

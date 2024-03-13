@@ -4,7 +4,7 @@ pub use enumtype::EnumType;
 
 
 
-/// Special one will not contain anything but will be more difficult to turn into code / have different behaviour
+/// Special types have vastly different behaviour than the other types and can not be directly inferred from a string representation (except for bool).
 #[derive(Debug, Eq, PartialEq)]
 pub enum SpecialType {
     // the enum variant will contain the name.. or to separate it be make a named RType, which will contain building functions, expressions and declarations 
@@ -25,7 +25,7 @@ impl RTypeTrait for SpecialType {
         use super::TypeError;
         Err(TypeError::SPECIALTYPEPARSE)
     }
-    /// Call this last in a stack because it will always return SpecialType::Regex ... no real way to detect that other than looking for chaos
+    // Call this last in a stack because it will always return SpecialType::Regex ... no real way to detect that other than looking for chaos
 /*     fn from_valuestr<T: AsRef<str>>(valuestr: T) -> Result<Self, super::TypeError> where Self: Sized {
         if let Some(enumtype) = EnumType::from_value(valuestr.as_ref()) {return Ok(enumtype)}
         // if is "false" || "true" -> bool

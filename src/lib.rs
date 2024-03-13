@@ -26,10 +26,10 @@
 //!     use csvenum::{TableParser};
 //! 
 //!     let rows: Vec<&str> = vec![
-//!         "TYPES,         &str,       (usize,f64),    &str",
+//!         "TYPES,         &str,       (usize,f64),    bool",
 //!         "MyEnumName,    Property1,  Property2,      Property3",
-//!         "Variant1,      standard,   (0,3.14),       cheap",
-//!         "Variant2,      medium,     (0,9.82),       pricey",
+//!         "Variant1,      standard,   (0,3.14),       true",
+//!         "Variant2,      medium,     (0,9.82),       false",
 //!     ];
 //! 
 //!     let table_parser = TableParser::from_csv_lines(rows);
@@ -40,6 +40,18 @@
 //!     let val_var1_prop2 = enumtable.get_value_by_col_row(1,0).unwrap();
 //!     assert_eq!(val_var1_prop2, "(0,3.14)");
 //! ```
+//! 
+//! ## Code generation
+//! 
+//! To make writing the code-gen easier this crate implements a basic type system, consisting of enums and a unify'ing trait.
+//! 
+//! The base type being the [RType] that all other types are nested in.
+//! 
+//! The corresponding [RTypeTrait] is implemented for all nested types and provides QoL functions for validation and wrapping values in their respective container. 
+//! 
+//! The [code_gen] module contains the necessary code for generation. A small example can be found in the [code_gen::TextBlock] documentation.
+//! 
+//! 
 
 
 extern crate regex;

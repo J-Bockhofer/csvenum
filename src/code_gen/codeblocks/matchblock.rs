@@ -1,6 +1,7 @@
 use std::fmt;
-use super::{indent_string};
+use super::indent_string;
 
+/// Struct for making it less repetitive to write match blocks
 #[derive(Debug, Clone, Default)]
 pub struct MatchBlock {
     tabwidth: usize,
@@ -13,11 +14,11 @@ pub struct MatchBlock {
 }
 
 impl MatchBlock {
-    pub fn new(match_key: String, indent_self: bool) -> Self {
+    pub fn new<T: AsRef<str>>(match_key: T, indent_self: bool) -> Self {
         MatchBlock {
             tabwidth: 4,
             indent_self,
-            match_this: match_key, 
+            match_this: match_key.as_ref().to_string(), 
             num_arms: 0,
             arms_lh: vec![], 
             arms_rh: vec![],
@@ -32,9 +33,9 @@ impl MatchBlock {
     pub fn set_indent_depth(&mut self, depth: usize) {
         self.indent_depth = depth;
     }
-    pub fn add_arm(&mut self, left: String, right: String) {
-        self.arms_lh.push(left);
-        self.arms_rh.push(right);
+    pub fn add_arm<T: AsRef<str>>(&mut self, left: T, right: T) {
+        self.arms_lh.push(left.as_ref().to_string());
+        self.arms_rh.push(right.as_ref().to_string());
         self.num_arms = self.num_arms + 1;
     }
 
