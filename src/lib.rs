@@ -4,7 +4,7 @@
 //! 
 //! The following is meant for internal reference and the curious minded.
 //! 
-//! `If you are looking to generate enums from a csv, refer to the Usage section of the [readme](https://github.com/J-Bockhofer/csvenum/blob/main/README.md)`
+//! `If you are looking to generate enums from a csv, refer to the Usage section of the readme` @[github](https://github.com/J-Bockhofer/csvenum/blob/main/README.md)
 //! 
 //! 
 //! ## Structure
