@@ -265,18 +265,18 @@ pub fn country_from_country_code(country_code: usize) -> Option<Country>
 }
 
 // Constants for `name`
-const NAME_AFG: &str = "Afghanistan";
-const NAME_ALA: &str = "Ãland Islands";
-const NAME_ALB: &str = "Albania";
-const NAME_DZA: &str = "Algeria";
-const NAME_ASM: &str = "American Samoa";
-const NAME_AND: &str = "Andorra";
-const NAME_AGO: &str = "Angola";
-const NAME_AIA: &str = "Anguilla";
-const NAME_ATA: &str = "Antarctica";
-const NAME_ATG: &str = "Antigua and Barbuda";
-const NAME_ARG: &str = "Argentina";
-const NAME_ARM: &str = "Armenia";
+const NAME_AFG: &'static str = "Afghanistan";
+const NAME_ALA: &'static str = "Ãland Islands";
+const NAME_ALB: &'static str = "Albania";
+const NAME_DZA: &'static str = "Algeria";
+const NAME_ASM: &'static str = "American Samoa";
+const NAME_AND: &'static str = "Andorra";
+const NAME_AGO: &'static str = "Angola";
+const NAME_AIA: &'static str = "Anguilla";
+const NAME_ATA: &'static str = "Antarctica";
+const NAME_ATG: &'static str = "Antigua and Barbuda";
+const NAME_ARG: &'static str = "Argentina";
+const NAME_ARM: &'static str = "Armenia";
 
 /// Function to convert from Country to name
 pub const fn country_as_name(country: &Country) -> &str
@@ -318,18 +318,18 @@ pub fn country_from_name(name: &str) -> Option<Country>
 }
 
 // Constants for `alpha_2`
-const ALPHA_2_AFG: &str = "AF";
-const ALPHA_2_ALA: &str = "AX";
-const ALPHA_2_ALB: &str = "AL";
-const ALPHA_2_DZA: &str = "DZ";
-const ALPHA_2_ASM: &str = "AS";
-const ALPHA_2_AND: &str = "AD";
-const ALPHA_2_AGO: &str = "AO";
-const ALPHA_2_AIA: &str = "AI";
-const ALPHA_2_ATA: &str = "AQ";
-const ALPHA_2_ATG: &str = "AG";
-const ALPHA_2_ARG: &str = "AR";
-const ALPHA_2_ARM: &str = "AM";
+const ALPHA_2_AFG: &'static str = "AF";
+const ALPHA_2_ALA: &'static str = "AX";
+const ALPHA_2_ALB: &'static str = "AL";
+const ALPHA_2_DZA: &'static str = "DZ";
+const ALPHA_2_ASM: &'static str = "AS";
+const ALPHA_2_AND: &'static str = "AD";
+const ALPHA_2_AGO: &'static str = "AO";
+const ALPHA_2_AIA: &'static str = "AI";
+const ALPHA_2_ATA: &'static str = "AQ";
+const ALPHA_2_ATG: &'static str = "AG";
+const ALPHA_2_ARG: &'static str = "AR";
+const ALPHA_2_ARM: &'static str = "AM";
 
 /// Function to convert from Country to alpha_2
 pub const fn country_as_alpha_2(country: &Country) -> &str

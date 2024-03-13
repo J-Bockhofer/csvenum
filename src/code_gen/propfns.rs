@@ -63,7 +63,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                 let valstr = &et.get_value_by_col_row(col, row).unwrap();
                 let wr_val = col_type.wrap_valuestr(valstr);
                 let variant_name = format!("{}::{}", enumname, var_name);
-    
+                let typeprefix = if no_ref_type == "str".to_string() {"&'static "} else {""};
     
     
                 let const_decl = format!(

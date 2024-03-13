@@ -162,7 +162,7 @@ pub fn car_from_is_expensive(is_expensive: bool) -> Vec<Car>
     match is_expensive {
         false => IS_EXPENSIVE_VALUE_GRP_0.to_vec(),
         true => IS_EXPENSIVE_VALUE_GRP_1.to_vec(),
-        _ => vec![],
+        //_ => vec![],
     }
 }
 #[cfg(test)]
