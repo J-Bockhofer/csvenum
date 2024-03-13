@@ -19,7 +19,7 @@ Especially for painstakingly hand-coded, or macro-intensive libraries like [cele
 
 This file could provide users with a convenient means to append their own data and library authors with a single source of truth for their constants.
 
-You can just grab a file like [this](), add type information and be good to go.
+You can just grab a file like [this](https://github.com/J-Bockhofer/csvenum/blob/main/examples/country_data.csv), add type information and be good to go.
 
 If you want to associate data with a pre-existing enum, you might want to check out [strum](https://crates.io/crates/strum) instead.
 
