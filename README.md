@@ -53,7 +53,7 @@ To generate the code pass the filename to the CLI. Here `countries.csv`.
 
 
 ```console
-cargo csvenum countries.csv
+csvenum countries.csv
 ```
 
 
@@ -134,7 +134,7 @@ Bools can also be 0 or 1 in the table instead of just false or true.
 ## CLI options
 
 ```console
-cargo csvenum --help
+csvenum --help
 ```
 
 ```
@@ -215,4 +215,4 @@ Additionally, doing code-gen over a CLI eliminates the need to add this crate to
 
 
 
-Please report any issue you find or suggestion you have to further improve this tool!
+`Please report any issue you find or suggestion you have to further improve this tool!`
