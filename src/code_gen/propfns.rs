@@ -10,6 +10,8 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
     let props = et.get_properties();
     let vars = et.get_variants();
     let enumname_lc = enumname.to_ascii_lowercase();
+    let col_has_dup_vec = et.get_col_has_duplicate_vec();
+    let dup_map = et.get_duplicate_value_map();
 
     //let mut const_names: Vec<String> = vec![];
 
@@ -18,8 +20,11 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         let prop_name = &props[col];
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
-        let typeprefix = if no_ref_type == "str".to_string() {"&'static "} else {""};
+        let typeprefix = if no_ref_type == "str".to_string() {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
+
+        let col_has_dup = col_has_dup_vec[col];
+        let col_dup_map = &dup_map[col];
 
         let mut astb = TextBlock::new();
         let mut fromtb = TextBlock::new();
@@ -34,39 +39,81 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         fromtb.add_line(format!("/// Function to convert from {} to {}", prop_name, enumname));
         let mut asmatchb = MatchBlock::new(enumname_lc.to_string(), true);
 
-        let fromfn_hdr = format!(
-            "pub fn {}_from_{}({}: {}) -> Option<{}>", enumname_lc, prop_lc, prop_lc, col_type.to_typestr(), enumname
-        );
+        let fromfn_hdr = if col_has_dup {
+            format!(
+            "pub fn {}_from_{}({}: {}) -> Vec<{}>", enumname_lc, prop_lc, prop_lc, col_type.to_typestr(), enumname)            
+        } else {
+            format!(
+            "pub fn {}_from_{}({}: {}) -> Option<{}>", enumname_lc, prop_lc, prop_lc, col_type.to_typestr(), enumname)
+        } ;
         fromtb.add_line(fromfn_hdr);
         fromtb.open_closure(true);
 
         let mut frommatchb = MatchBlock::new(prop_lc, true);
 
         let mut pblock = TextBlock::new();
+        pblock.add_line(String::new());
         pblock.add_line(format!(
-            "/// Constants for `{}`", prop_name
+            "// Constants for `{}`", prop_name
         ));
+        if !col_has_dup {
+            for row in 0..vars.len() {
+                let var_name = &vars[row];
+                let const_name = format!("{}_{}", prop_name.to_ascii_uppercase(), var_name.to_ascii_uppercase());
+                let valstr = &et.get_value_by_col_row(col, row).unwrap();
+                let wr_val = col_type.wrap_valuestr(valstr);
+                let variant_name = format!("{}::{}", enumname, var_name);
+    
+    
+    
+                let const_decl = format!(
+                    "const {}: {}{} = {};", const_name, typeprefix, no_ref_type, wr_val
+                );
+                pblock.add_line(const_decl);
+                
+                asmatchb.add_arm(variant_name.clone(), const_name.clone());
+                frommatchb.add_arm(const_name, format!("Some({})", &variant_name));
+    
+                //const_names.push(const_name);
+            }
+            frommatchb.add_arm("_".to_string(), "Option::None".to_string());
+        } else {
+            // we need to iterate over duplicate values
+            let mut grp_cnt = 0;
+            for val_grp in col_dup_map {
+                let num_in_group = val_grp.1.len();
+                let const_doc = format!("/// Group of {} variants with value: `{}`", num_in_group, val_grp.0);
+                let const_name = format!("{}_VALUE_GRP_{}", prop_name.to_ascii_uppercase(), grp_cnt);
+                let const_type = format!("[{}; {}]", enumname, num_in_group);
+                let mut collected_variants = String::from("[");
+                for variant in &val_grp.1 {
+                    let variant_name = format!("{}::{}, ", enumname, variant);
+                    collected_variants.push_str(&variant_name);
+                }
+                collected_variants.push_str("];");
+                let const_decl = format!("const {}: {} = {}", const_name, const_type, collected_variants);
+                pblock.add_line(const_doc);
+                pblock.add_line(const_decl);
+                frommatchb.add_arm(format!("{}", col_type.wrap_valuestr(&val_grp.0)), format!("{}.to_vec()", const_name) );
 
-        for row in 0..vars.len() {
-            let var_name = &vars[row];
-            let const_name = format!("{}_{}", prop_name.to_ascii_uppercase(), var_name.to_ascii_uppercase());
-            let valstr = &et.get_value_by_col_row(col, row).unwrap();
-            let wr_val = col_type.wrap_valuestr(valstr);
-            let variant_name = format!("{}::{}", enumname, var_name);
 
+                grp_cnt += 1;
 
+            }
+            frommatchb.add_arm("_".to_string(), "vec![]".to_string());
+            for row in 0..vars.len() {
+                let var_name = &vars[row];
+                let valstr = &et.get_value_by_col_row(col, row).unwrap();
+                let wr_val = col_type.wrap_valuestr(valstr);
+                let variant_name = format!("{}::{}", enumname, var_name);
+                asmatchb.add_arm(variant_name, wr_val);
+            }
 
-            let const_decl = format!(
-                "const {}: {}{} = {};", const_name, typeprefix, no_ref_type, wr_val
-            );
-            pblock.add_line(const_decl);
-            
-            asmatchb.add_arm(variant_name.clone(), const_name.clone());
-            frommatchb.add_arm(const_name, format!("Some({})", &variant_name));
-
-            //const_names.push(const_name);
         }
-        frommatchb.add_arm("_".to_string(), "Option::None".to_string());
+
+
+
+
         let from_lines = frommatchb.to_lines();
         let as_lines = asmatchb.to_lines();
 

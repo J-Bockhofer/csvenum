@@ -130,7 +130,10 @@ impl TableParser {
         // values 
         let values = &self.data_cols[1..self.data_cols.len()];
         enumtable.set_data(values.to_owned());
-        enumtable.check_duplicates()?;
+        enumtable.check_duplicate_variants()?;
+        enumtable.check_column_duplicates();
+        //enumtable.check_duplicates()?;
+        enumtable.make_duplicate_map();
         enumtable.check_valid_values()?;
         enumtable.check_valid_types_for_code()?;
         

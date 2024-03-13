@@ -8,7 +8,7 @@ pub fn generate_enum_decl(et: &EnumTable) -> TextBlock {
     let properties = et.get_properties();
 
     tb.add_line(String::from(
-        "#[derive(Debug, Eq, PartialEq)]"
+        "#[derive(Debug, Eq, PartialEq, Clone)]"
     ));
     tb.add_line(format!("pub enum {}", et.get_name())); // {{
     tb.open_closure(true);     
@@ -40,6 +40,7 @@ pub fn generate_enum_decl(et: &EnumTable) -> TextBlock {
 pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
     // declare all variants as const array
     let mut tb = TextBlock::new();
+    tb.add_line(String::new());
     let variants = et.get_variants();
     let enumname = et.get_name();
 
@@ -48,6 +49,7 @@ pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
 
     // declare the const array
     let arr_decl = format!("const {}: [{}; {}] = [ ", const_varname, enumname, variants.len());
+    tb.open_closure(false);
     tb.add_line(arr_decl);
     for variant in variants { 
         tb.add_line_indented(format!(
@@ -55,6 +57,7 @@ pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
         ));
     }
     tb.add_line(String::from("];"));
+    tb.close_closure(false);
 
     // declare the function
     let fn_decl = format!("pub const fn {}_get_all_variants() -> [{}; {}]", enumname_lc, enumname, variants.len());
@@ -72,6 +75,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
     let variants = et.get_variants();
     let enumname = et.get_name();
     let enumname_lc = enumname.to_ascii_lowercase();
+    tb.add_line(String::new());
     tb.add_line(format!("// Variant string representation."));
 
     let mut const_names: Vec<String> = vec![];
@@ -96,7 +100,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
     tb.add_line(fn_decl);
     tb.open_closure(true);
     let matchblock = MatchBlock::from_keys(enumname_lc.clone(), var_names.clone(), const_names.clone(), true);
-    matchblock.lines_into(&mut tb.lines);
+    tb.append_lines(matchblock.to_lines());
     tb.close_closure(true);   
 
     tb.add_line(String::new());
@@ -111,7 +115,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
         matchblock.add_arm(const_names[i].clone(), format!("Some({})", var_names[i]));
     }
     matchblock.add_arm("_".to_string(), "Option::None".to_string());
-    matchblock.lines_into(&mut tb.lines);
+    tb.append_lines(matchblock.to_lines());
     tb.close_closure(true);
     tb
 }

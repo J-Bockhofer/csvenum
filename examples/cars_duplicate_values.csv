@@ -1,0 +1,6 @@
+ENUM,   &str,       bool
+Car,    name,       is_expensive
+A,      Jonda,      false
+B,      Gord,       false
+C,      Hamborghini,true
+D,      Yotota,     true

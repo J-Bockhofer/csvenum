@@ -1,5 +1,5 @@
 
-use std::collections::HashSet;
+use std::collections::{HashMap,HashSet};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -20,6 +20,8 @@ pub enum TableError {
     DataEmpty,
     #[error("Missing feature: {0}")]
     MissingFeature(String),
+    #[error("Duplicate cariant detected: {0} in row: {1}.")]
+    DuplicateVariant(String, usize),
 
 }
 
@@ -30,7 +32,7 @@ use crate::{RType, RTypeTrait};
 /// ## Example:
 /// 
 /// ```
-///     use csvenum::{TableParser, ToEnumTable};
+///     use csvenum::{TableParser};
 /// 
 ///     let rows: Vec<&str> = vec![
 ///         "TYPES,         &str,       (usize,f64),    &str",
@@ -54,6 +56,9 @@ pub struct EnumTable {
     variants: Vec<String>,
     data: Vec<Vec<String>>,
     pub parsed_types: Vec<RType>,
+    // column, unique value (value, group)
+    col_has_duplicates: Vec<bool>,
+    col_unique_value_maps: Vec<Vec<(String, Vec<String>)>>,
 }
 
 impl EnumTable {
@@ -64,7 +69,10 @@ impl EnumTable {
             properties: Vec::new(), 
             variants: Vec::new(), 
             data: Vec::new(),
-            parsed_types: Vec::new() }
+            parsed_types: Vec::new(),
+            col_unique_value_maps: Vec::new(),
+            col_has_duplicates: Vec::new(),
+         }
     }
     pub fn get_name(&self) -> &str {
         &self.enumname
@@ -117,7 +125,9 @@ impl EnumTable {
         self.parsed_types = parsed_types;
         Ok(())
     }
-    /// Checks each column for duplicate values
+    // Checks each column for duplicate values, should not error but provide a Vec<Vec<bool>> for col,row = value is_duplicate or not
+    // For properties with duplicates we should iterate over the duplicate values and have the associated variants prelinked
+    // Make HashMap of K:value V: Vec<variantname>
     pub fn check_duplicates(&self) -> Result<(), TableError> {
         let mut unique_checker = HashSet::new();
         let num_cols = self.properties.len();
@@ -134,6 +144,58 @@ impl EnumTable {
         }
         Ok(())
     }
+    pub fn check_column_duplicates(&mut self) {
+        let mut has_duplicates = Vec::new();
+
+        for column in self.data.iter() {
+            let mut seen = HashSet::new();
+            let mut has_duplicate = false;
+    
+            for value in column {
+                if !seen.insert(value) {
+                    has_duplicate = true;
+                    break;
+                }
+            }
+    
+            has_duplicates.push(has_duplicate);
+        }
+        self.col_has_duplicates = has_duplicates;
+    }
+    pub fn get_col_has_duplicate_vec(&self) -> &Vec<bool> {
+        &self.col_has_duplicates
+    }
+
+    pub fn check_duplicate_variants(&self) -> Result<(), TableError> {
+        let mut unique_checker = HashSet::new();
+        let mut row_cnt = 0;
+        for variant in &self.variants {
+            if !unique_checker.insert(variant) {
+                return Err(TableError::DuplicateVariant(variant.to_owned(), row_cnt));
+            }  
+            row_cnt += 1;
+        }
+        Ok(())
+    }
+
+    pub fn make_duplicate_map(&mut self) {
+        let mut col_val_grp: Vec<Vec<(String, Vec<String>)>> = vec![];
+        let num_cols = self.properties.len();
+        for i in 0..num_cols {
+            if self.col_has_duplicates[i] {
+                let unique_groupings = group_variants_by_value(self.variants.clone(), self.data[i].clone());
+                col_val_grp.push(unique_groupings);
+            } else {
+                col_val_grp.push(vec![]);
+            }
+        }
+        self.col_unique_value_maps = col_val_grp;
+    }
+
+    pub fn get_duplicate_value_map(&self) -> &Vec<Vec<(String, Vec<String>)>> {
+        &self.col_unique_value_maps
+    } 
+
     /// No extra bounds check other than Rust internal panic
     pub fn get_variant_at(&self, idx: usize) -> &String {
         &self.variants[idx]
@@ -195,8 +257,8 @@ impl EnumTable {
     /// In Lieu of a fully working code_gen for all types and a config we do all here for now
     pub fn check_valid_types_for_code(&self) -> Result<(), TableError> {
         self.check_all_types_const()?;
-        let max_depth = 1;
-        let max_breadth = 3;
+        let max_depth = 2;
+        let max_breadth = 5;
         if !self.all_types_depth_smaller_than(max_depth) || !self.all_types_breadth_smaller_than(max_breadth) {
             return Err(TableError::MissingFeature(String::from("Table contains to deeply nested values.")))
         }
@@ -205,3 +267,46 @@ impl EnumTable {
 
 }
 
+pub fn group_variants_by_value(variants: Vec<String>, values: Vec<String>) -> Vec<(String, Vec<String>)> {
+    let mut value_map: HashMap<&String, Vec<String>> = HashMap::new();
+    let mut unique_values: HashSet<&String> = HashSet::new();
+    let mut result: Vec<(String, Vec<String>)> = Vec::new();
+
+    // Iterate over the indices and group variants by their corresponding values
+    for (index, value) in values.iter().enumerate() {
+        // Check if the value has been encountered before
+        if !unique_values.contains(value) {
+            unique_values.insert(value);
+            value_map.insert(value, Vec::new());
+        }
+        // Push the variant to the corresponding value group
+        if let Some(group) = value_map.get_mut(value) {
+            group.push(variants[index].clone());
+        }
+    }
+    //println!("{:?}", unique_values);
+
+    for value in unique_values.iter() {
+        if let Some(group) = value_map.get(value) {
+            result.push((value.to_string(), group.clone()));
+        }
+    }
+    result    
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_group_variants_by_value() {
+        let variants = vec!["Variant1".to_string(), "Variant2".to_string(), "Variant3".to_string(), "Variant4".to_string()];
+        let values = vec!["Value1".to_string(), "Value2".to_string(), "Value1".to_string(), "Value3".to_string()];
+    
+        let result = group_variants_by_value(variants, values);
+        println!("{:?}", result);
+
+    }
+
+}

@@ -21,6 +21,7 @@ You can just grab a file like [this](), add type information and be good to go.
 
 If you want to associate data with a pre-existing enum, you might want to check out [strum](https://crates.io/crates/strum) instead.
 
+
 # Usage
 
 Since this crate is meant to be a tool for speeding up Rust development, it is available as a `cargo install`.
@@ -117,12 +118,16 @@ Note that you can use commas in nested fields when they are enclosed with the ap
 
 - Array : `[]`
 
+Duplicate values in a column will be collected to an array that holds all corresponding variants. 
 
 For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
 
 Also there is an arbitrary but reasonable limit on value nesting depth to avoid headaches.
 
-Note that property names will have to follow valid 
+Note that property names will have to follow valid Rust variable naming rules.
+
+Bools can also be 0 or 1 in the table instead of just false or true.
+
 
 ## CLI options
 
@@ -153,31 +158,30 @@ Options:
           Print version
 ```
 
+
 ## Features
 
-1. (Always) - Declaration of the enum with the given variants and doc-strings that include all properties + values
 
-2. (Option, true) - Variant name as and from str functions + std::fmt::Display impl that prints the name and all associated values to a string. 
+- (Always) - Declaration of the enum with the given variants and doc-strings that include all properties + values
 
-3. (Always) - Declares property values as constants and as and from conversion function between them. You can opt to split the properties into separate files.
+- (Option, true) - Variant name as and from str functions + std::fmt::Display impl that prints the name and all associated values to a string. 
 
-4. (Option, true) - Generates an impl block for the enum that contains links to the property conversion functions, also generates a test module.
+- (Always) - Declares property values as constants and as and from conversion function between them. You can opt to split the properties into separate files.
 
-5. (Always) - Generates a get_all_variants function -> [MyEnum; N_variants]
+- (Option, true) - Generates an impl block for the enum that contains links to the property conversion functions, also generates a test module.
+
+- (Always) - Generates a get_all_variants function -> [MyEnum; N_variants]
+
 
 
 ## Known Issues
 
 1. Trailing commas in .csv - could fix but shouldnt really have them to begin with.
 
-2. Non-ASCII characters in identifiers.
+2. Invalid characters in variants and properties for Rust identifiers.
 
 
 ## Future plans
-
-0. bools
-
-0. Check u-numeric values for sign.
 
 1. Dedicated Column for Ord implementation
 
@@ -185,11 +189,9 @@ Options:
 
 3. Provide `OnceLock` wrappers for non-const statics.  
 
-4. Option on data for missing values.
+4. Option on data with missing values.
 
 5. BTrees and HashMaps for large datasets.
-
-Please report any issue you find or suggestion you have to further improve this tool!
 
 
 ### Why not as a macro?
@@ -198,7 +200,7 @@ Simple: I dont know macros well enough to pull this off, before this project I d
 
 But:
 
-Macros generate unnecessary overhead on every compilation in cases like this, where a lot of string parsing is necessary to generate the output.
+Macros generate unnecessary overhead on every compilation in cases, where the data-layout can be determined early on.
 
 Having your enum transpiled from a .csv further lends itself to the vast tooling around csv's for data manipulation.
 
@@ -206,3 +208,9 @@ On a personal note, I find it easier having to check just a single location for 
 
 Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, also one less dependancy.
 
+
+
+
+
+
+Please report any issue you find or suggestion you have to further improve this tool!

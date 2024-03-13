@@ -10,6 +10,8 @@ pub enum SpecialType {
     // the enum variant will contain the name.. or to separate it be make a named RType, which will contain building functions, expressions and declarations 
     Enum(String), // no just use the trait and store name here
     Regex,
+    /// When a property is of type singular bool then collect all variants with true and false as const array and return as Vec in match function
+    Bool,
     // bool
 }
 
@@ -35,6 +37,7 @@ impl RTypeTrait for SpecialType {
     fn to_typestr(&self) -> String {
         match self {
             Self::Enum(x) => {x.to_owned()},
+            Self::Bool => {"bool".to_string()},
             Self::Regex => {todo!("Regex not impl yet")},
         }
     }
@@ -54,21 +57,27 @@ impl RTypeTrait for SpecialType {
     /// 
     /// 
     fn is_const(&self) -> bool {
-        false
-/*         match self {
-            Self::Enum(_) => {false},
-            Self::Regex => {false},
-        }   */      
+        match self {
+            Self::Bool => {true},
+            _ => {false},
+        }        
     }
     /// For enums, values are variants, so the Rust syntax rules for Enum variants apply, it could also have the name of the enum prefixed
     /// 
     /// For Regex, values are r"" that contain weird characters, so take anything as valid i guess... but when get_or_init'ing the OnceLock<Regex> handle the except with a generated error message
     /// 
     fn value_is_valid(&self, valuestr: &str) -> bool {
-            match self {
+        match self {
             Self::Enum(x) => {EnumType::value_is_valid_enum(x, valuestr)},
             Self::Regex => {
                 true},
+            Self::Bool => {
+                let valstr = valuestr.trim();
+                match valstr {
+                    "true" | "True" | "1" | "false" | "False" | "0" => {true}
+                    _ => false
+                }
+            },
         }
     }
 
@@ -84,10 +93,18 @@ impl RTypeTrait for SpecialType {
                 if !valuestr.contains(x) {
                     format!("{}::{}",x , valuestr)
                 } else {valuestr.to_string()}
-            }
+            },
             Self::Regex => {
                 todo!("Impl wrapping for value of type regex with OnceLock get_or_init ...");
-            }
+            },
+            Self::Bool => {
+                let valstr = valuestr.trim();
+                match valstr {
+                    "true" | "True" | "1"  => "true".to_string(),
+                     "false" | "False" | "0" => "false".to_string(),
+                    _ => "false".to_string()
+                }                
+            },
         }  
     }
     fn can_match_as_key(&self) -> bool {

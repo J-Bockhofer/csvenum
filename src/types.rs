@@ -141,8 +141,9 @@ impl RType {
 
 impl RTypeTrait for RType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, TypeError> where Self: Sized {
-        let mut typestr = typestr.as_ref(); // may be changed when a lifetime is obtained.
+        let mut typestr = typestr.as_ref().trim(); // may be changed when a lifetime is obtained.
         // first we need to look if one of our regex matches
+
 
         // strip any references - check if there is one at position 1, + a lifetime
         // let typestr = typestr.replace("&", "").replace(" ", "");
@@ -167,6 +168,12 @@ impl RTypeTrait for RType {
                 return Err(TypeError::EmptyTypeWithReference(typestr.to_string()));
             }
         }
+
+        match typestr {
+            "bool" | "boolean" | "Bool" | "Boolean" => return Ok(Self::Special(reference, SpecialType::Bool)),
+            _ => {} // not a bool,
+        }
+
 
         // enum 
         if let Some(captures) = enum_re.captures(&typestr) {

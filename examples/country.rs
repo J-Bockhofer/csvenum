@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Country
 {
     /// `AFG` <br>
@@ -98,7 +98,7 @@ impl Country
         country_from_country_code(country_code)
     }
     /// Function to convert from Country to name
-    pub fn as_name(&self) -> &'static str
+    pub fn as_name(&self) -> &str
     {
         country_as_name(self)
     }
@@ -107,7 +107,7 @@ impl Country
         country_from_name(name)
     }
     /// Function to convert from Country to alpha_2
-    pub fn as_alpha_2(&self) -> &'static str
+    pub fn as_alpha_2(&self) -> &str
     {
         country_as_alpha_2(self)
     }
@@ -137,24 +137,26 @@ impl std::fmt::Display for Country
         Ok(())
     }
 }
+
 const COUNTRY_ALL_VARIANTS_ARRAY: [Country; 12] = [ 
-Country::AFG,
-Country::ALA,
-Country::ALB,
-Country::DZA,
-Country::ASM,
-Country::AND,
-Country::AGO,
-Country::AIA,
-Country::ATA,
-Country::ATG,
-Country::ARG,
-Country::ARM,
+    Country::AFG,
+    Country::ALA,
+    Country::ALB,
+    Country::DZA,
+    Country::ASM,
+    Country::AND,
+    Country::AGO,
+    Country::AIA,
+    Country::ATA,
+    Country::ATG,
+    Country::ARG,
+    Country::ARM,
 ];
 pub const fn country_get_all_variants() -> [Country; 12]
 {
     COUNTRY_ALL_VARIANTS_ARRAY
 }
+
 // Variant string representation.
 const COUNTRY_AFG_STR:&'static str = "AFG";
 const COUNTRY_ALA_STR:&'static str = "ALA";
@@ -172,43 +174,44 @@ const COUNTRY_ARM_STR:&'static str = "ARM";
 /// Returns the variants name as a &str.
 pub const fn country_as_variant_str(country: &Country) -> &'static str
 {
-match country {
-    Country::AFG => COUNTRY_AFG_STR,
-    Country::ALA => COUNTRY_ALA_STR,
-    Country::ALB => COUNTRY_ALB_STR,
-    Country::DZA => COUNTRY_DZA_STR,
-    Country::ASM => COUNTRY_ASM_STR,
-    Country::AND => COUNTRY_AND_STR,
-    Country::AGO => COUNTRY_AGO_STR,
-    Country::AIA => COUNTRY_AIA_STR,
-    Country::ATA => COUNTRY_ATA_STR,
-    Country::ATG => COUNTRY_ATG_STR,
-    Country::ARG => COUNTRY_ARG_STR,
-    Country::ARM => COUNTRY_ARM_STR,
-}
+    match country {
+        Country::AFG => COUNTRY_AFG_STR,
+        Country::ALA => COUNTRY_ALA_STR,
+        Country::ALB => COUNTRY_ALB_STR,
+        Country::DZA => COUNTRY_DZA_STR,
+        Country::ASM => COUNTRY_ASM_STR,
+        Country::AND => COUNTRY_AND_STR,
+        Country::AGO => COUNTRY_AGO_STR,
+        Country::AIA => COUNTRY_AIA_STR,
+        Country::ATA => COUNTRY_ATA_STR,
+        Country::ATG => COUNTRY_ATG_STR,
+        Country::ARG => COUNTRY_ARG_STR,
+        Country::ARM => COUNTRY_ARM_STR,
+    }
 }
 
 /// Returns the enum given a string that might represent the variant's name.
 pub fn country_from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<Country>
 {
     let variantstr = variantstr.as_ref();
-match variantstr {
-    COUNTRY_AFG_STR => Some(Country::AFG),
-    COUNTRY_ALA_STR => Some(Country::ALA),
-    COUNTRY_ALB_STR => Some(Country::ALB),
-    COUNTRY_DZA_STR => Some(Country::DZA),
-    COUNTRY_ASM_STR => Some(Country::ASM),
-    COUNTRY_AND_STR => Some(Country::AND),
-    COUNTRY_AGO_STR => Some(Country::AGO),
-    COUNTRY_AIA_STR => Some(Country::AIA),
-    COUNTRY_ATA_STR => Some(Country::ATA),
-    COUNTRY_ATG_STR => Some(Country::ATG),
-    COUNTRY_ARG_STR => Some(Country::ARG),
-    COUNTRY_ARM_STR => Some(Country::ARM),
-    _ => Option::None,
+    match variantstr {
+        COUNTRY_AFG_STR => Some(Country::AFG),
+        COUNTRY_ALA_STR => Some(Country::ALA),
+        COUNTRY_ALB_STR => Some(Country::ALB),
+        COUNTRY_DZA_STR => Some(Country::DZA),
+        COUNTRY_ASM_STR => Some(Country::ASM),
+        COUNTRY_AND_STR => Some(Country::AND),
+        COUNTRY_AGO_STR => Some(Country::AGO),
+        COUNTRY_AIA_STR => Some(Country::AIA),
+        COUNTRY_ATA_STR => Some(Country::ATA),
+        COUNTRY_ATG_STR => Some(Country::ATG),
+        COUNTRY_ARG_STR => Some(Country::ARG),
+        COUNTRY_ARM_STR => Some(Country::ARM),
+        _ => Option::None,
+    }
 }
-}
-/// Constants for `country_code`
+
+// Constants for `country_code`
 const COUNTRY_CODE_AFG: usize = 4;
 const COUNTRY_CODE_ALA: usize = 248;
 const COUNTRY_CODE_ALB: usize = 8;
@@ -260,22 +263,23 @@ pub fn country_from_country_code(country_code: usize) -> Option<Country>
         _ => Option::None,
     }
 }
-/// Constants for `name`
-const NAME_AFG: &'static str = "Afghanistan";
-const NAME_ALA: &'static str = "Ãland Islands";
-const NAME_ALB: &'static str = "Albania";
-const NAME_DZA: &'static str = "Algeria";
-const NAME_ASM: &'static str = "American Samoa";
-const NAME_AND: &'static str = "Andorra";
-const NAME_AGO: &'static str = "Angola";
-const NAME_AIA: &'static str = "Anguilla";
-const NAME_ATA: &'static str = "Antarctica";
-const NAME_ATG: &'static str = "Antigua and Barbuda";
-const NAME_ARG: &'static str = "Argentina";
-const NAME_ARM: &'static str = "Armenia";
+
+// Constants for `name`
+const NAME_AFG: &str = "Afghanistan";
+const NAME_ALA: &str = "Ãland Islands";
+const NAME_ALB: &str = "Albania";
+const NAME_DZA: &str = "Algeria";
+const NAME_ASM: &str = "American Samoa";
+const NAME_AND: &str = "Andorra";
+const NAME_AGO: &str = "Angola";
+const NAME_AIA: &str = "Anguilla";
+const NAME_ATA: &str = "Antarctica";
+const NAME_ATG: &str = "Antigua and Barbuda";
+const NAME_ARG: &str = "Argentina";
+const NAME_ARM: &str = "Armenia";
 
 /// Function to convert from Country to name
-pub const fn country_as_name(country: &Country) -> &'static str
+pub const fn country_as_name(country: &Country) -> &str
 {
     match country {
         Country::AFG => NAME_AFG,
@@ -312,22 +316,23 @@ pub fn country_from_name(name: &str) -> Option<Country>
         _ => Option::None,
     }
 }
-/// Constants for `alpha_2`
-const ALPHA_2_AFG: &'static str = "AF";
-const ALPHA_2_ALA: &'static str = "AX";
-const ALPHA_2_ALB: &'static str = "AL";
-const ALPHA_2_DZA: &'static str = "DZ";
-const ALPHA_2_ASM: &'static str = "AS";
-const ALPHA_2_AND: &'static str = "AD";
-const ALPHA_2_AGO: &'static str = "AO";
-const ALPHA_2_AIA: &'static str = "AI";
-const ALPHA_2_ATA: &'static str = "AQ";
-const ALPHA_2_ATG: &'static str = "AG";
-const ALPHA_2_ARG: &'static str = "AR";
-const ALPHA_2_ARM: &'static str = "AM";
+
+// Constants for `alpha_2`
+const ALPHA_2_AFG: &str = "AF";
+const ALPHA_2_ALA: &str = "AX";
+const ALPHA_2_ALB: &str = "AL";
+const ALPHA_2_DZA: &str = "DZ";
+const ALPHA_2_ASM: &str = "AS";
+const ALPHA_2_AND: &str = "AD";
+const ALPHA_2_AGO: &str = "AO";
+const ALPHA_2_AIA: &str = "AI";
+const ALPHA_2_ATA: &str = "AQ";
+const ALPHA_2_ATG: &str = "AG";
+const ALPHA_2_ARG: &str = "AR";
+const ALPHA_2_ARM: &str = "AM";
 
 /// Function to convert from Country to alpha_2
-pub const fn country_as_alpha_2(country: &Country) -> &'static str
+pub const fn country_as_alpha_2(country: &Country) -> &str
 {
     match country {
         Country::AFG => ALPHA_2_AFG,
@@ -383,3 +388,6 @@ mod tests
     }
 }
 
+fn main() {
+    
+}

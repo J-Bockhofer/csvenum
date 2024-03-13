@@ -11,6 +11,7 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
     let props = et.get_properties();
     let variants = et.get_variants();
     let enumname_lc = enumname.to_ascii_lowercase();
+    let col_has_dup_vec = et.get_col_has_duplicate_vec();
 
     tb.add_line(format!("impl {}", enumname));
     tb.open_closure(true);
@@ -41,7 +42,7 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
         let prop_name = &props[col];
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
-        let typeprefix = if no_ref_type == "str".to_string() {"&'static "} else {""};
+        let typeprefix = if no_ref_type == "str".to_string() {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
         tb.add_line_indented(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
@@ -54,9 +55,12 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
         tb.close_closure(true); 
 
         if col_type.can_match_as_key() {
-            let fromfn_hdr = format!(
+            
+            let fromfn_hdr = if col_has_dup_vec[col] {format!(
+                "pub fn from_{}({}: {}) -> Vec<Self>", prop_lc, prop_lc, col_type.to_typestr()
+            )} else {format!(
                 "pub fn from_{}({}: {}) -> Option<Self>", prop_lc, prop_lc, col_type.to_typestr()
-            );
+            )};
             tb.add_line_indented(fromfn_hdr);
             tb.open_closure(true);
             let linker = format!("{}_from_{}({})", &enumname_lc, prop_lc, prop_lc);
