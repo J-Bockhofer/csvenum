@@ -28,6 +28,9 @@ If you want to associate data with a pre-existing enum, you might want to check 
 
 Since this crate is meant to be a tool for speeding up Rust development, it is available as a `cargo install`.
 
+Note that it is in active development and there might still be bugs, so please check back for updates and report any issues you may find.
+
+
 ```console
 cargo install csvenum
 ```
@@ -102,13 +105,13 @@ The data will be rows, starting with the variant name, followed by the values pe
 Example
 
 ```
-ENUM,      &str,       usize,      (f64,f64)        <-- Column types
+ENUM,      &str,       usize,      [usize; 3]        <-- Column types
 
-GPIOpin,    Address,    Value,      XY              <-- Enum name followed by the property names
+GPIOpin,    Address,    Value,      XY               <-- Enum name followed by the property names
 
-PIN0,       0x00,       42,         (3.57,4.56)     <-- Variant name and associated values
-PIN1,       0x02,       56,         (8.12,7.64)
-PIN2,       0x04,       68,         (5.84,2.75)
+PIN0,       0x00,       42,         [1,5,7]          <-- Variant name and associated values
+PIN1,       0x02,       56,         [8,4,2]
+PIN2,       0x04,       68,         [12,3,2]
 
 ```
 
@@ -119,6 +122,8 @@ Note that you can use commas in nested fields when they are enclosed with the ap
 - Tuples : `()`
 
 - Array : `[]`
+
+Most software will export fields with nested commas with quotes, so a tuple would be "(1,2)". This is perfectly fine for the parser.
 
 Duplicate values in a column will be collected to an array that holds all corresponding variants. 
 
@@ -193,7 +198,7 @@ Options:
 
 4. Option on data with missing values.
 
-5. BTrees and HashMaps for large datasets.
+5. Static HashMaps for large datasets.
 
 
 ### Why not as a macro?

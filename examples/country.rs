@@ -80,7 +80,7 @@ impl Country
     {
         country_get_all_variants()
     }
-    pub fn as_variant_str(&self) -> &'static str
+    pub fn as_variant_str(&self) -> &str
     {
         country_as_variant_str(self)
     }
@@ -172,7 +172,7 @@ const COUNTRY_ARG_STR:&'static str = "ARG";
 const COUNTRY_ARM_STR:&'static str = "ARM";
 
 /// Returns the variants name as a &str.
-pub const fn country_as_variant_str(country: &Country) -> &'static str
+pub const fn country_as_variant_str(country: &Country) -> &str
 {
     match country {
         Country::AFG => COUNTRY_AFG_STR,
@@ -388,6 +388,4 @@ mod tests
     }
 }
 
-fn main() {
-    
-}
+fn main() {}

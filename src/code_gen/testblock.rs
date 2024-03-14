@@ -66,8 +66,8 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
             );            
             tb.open_closure(false);
             let mut minimatch = MatchBlock::new("x".to_string(), false);
-            minimatch.add_arm(format!("{}", res_or_enumlc), "Some(x)".to_string());
-            minimatch.add_arm("_".to_string(), format!("panic!(\"Error in test: Correct Variant not found in Vec for property: {}\")", prop).to_string());
+            minimatch.add_arm(format!("{}", var_name), "Some(x)".to_string());
+            minimatch.add_arm("_".to_string(), "None".to_string());
 
             tb.append_lines(minimatch.to_lines());
             tb.close_closure(true);

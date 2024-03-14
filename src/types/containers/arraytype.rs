@@ -12,7 +12,7 @@ pub struct ArrayType {
 
 impl ArrayType {
     pub fn wrap_typestr(vstr: &str, size: &usize) -> String {
-        format!("[{}, {}]", vstr, size)
+        format!("[{}; {}]", vstr, size)
     }
 
     /// let aaa: [[usize; 3]; 3] = [[3,3,3], [3,3,3], [3,3,3]];
@@ -66,6 +66,9 @@ mod tests {
     fn test_arraytype_valid_values() { 
         let input = "[usize; 3]";
         let result = ContainerType::from_typestr(input).unwrap();
+        let res = result.to_typestr();
+        assert_eq!(input, res);
+
         let rtype = RType::from_typestr(input).unwrap();
         let values = "[3,3,3]";
         assert!(result.value_is_valid(values));

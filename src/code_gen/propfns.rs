@@ -1,6 +1,17 @@
-use crate::{RTypeTrait};
+use crate::{RType, RTypeTrait};
 
 use super::{EnumTable, TextBlock, codeblocks::MatchBlock};
+
+
+#[allow(dead_code)]
+pub struct Property {
+    pub name: String,
+    pub rtype: RType,
+
+
+}
+
+
 
 /// Tuple of property and consts + fns, takes for granted that all passed values are of constant type
 pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
@@ -76,7 +87,9 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
     
                 //const_names.push(const_name);
             }
-            frommatchb.add_arm("_", "Option::None");
+            if col_type.to_typestr_no_ref() != "bool" {
+                frommatchb.add_arm("_", "Option::None");
+            }
         } else {
             // we need to iterate over duplicate values
             let mut grp_cnt = 0;
@@ -100,7 +113,9 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                 grp_cnt += 1;
 
             }
-            frommatchb.add_arm("_", "vec![]");
+            if col_type.to_typestr_no_ref() != "bool" {
+                frommatchb.add_arm("_", "vec![]");
+            }
             for row in 0..vars.len() {
                 let var_name = &vars[row];
                 let valstr = &et.get_value_by_col_row(col, row).unwrap();

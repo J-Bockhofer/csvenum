@@ -140,10 +140,10 @@ pub fn car_from_name(name: &str) -> Option<Car>
 }
 
 // Constants for `is_expensive`
-/// Group of 2 variants with value: `true`
-const IS_EXPENSIVE_VALUE_GRP_0: [Car; 2] = [Car::C, Car::D, ];
 /// Group of 2 variants with value: `false`
-const IS_EXPENSIVE_VALUE_GRP_1: [Car; 2] = [Car::A, Car::B, ];
+const IS_EXPENSIVE_VALUE_GRP_0: [Car; 2] = [Car::A, Car::B, ];
+/// Group of 2 variants with value: `true`
+const IS_EXPENSIVE_VALUE_GRP_1: [Car; 2] = [Car::C, Car::D, ];
 
 /// Function to convert from Car to is_expensive
 pub const fn car_as_is_expensive(car: &Car) -> bool
@@ -160,9 +160,8 @@ pub const fn car_as_is_expensive(car: &Car) -> bool
 pub fn car_from_is_expensive(is_expensive: bool) -> Vec<Car>
 {
     match is_expensive {
-        true => IS_EXPENSIVE_VALUE_GRP_0.to_vec(),
-        false => IS_EXPENSIVE_VALUE_GRP_1.to_vec(),
-        _ => vec![],
+        false => IS_EXPENSIVE_VALUE_GRP_0.to_vec(),
+        true => IS_EXPENSIVE_VALUE_GRP_1.to_vec(),
     }
 }
 #[cfg(test)]
@@ -180,8 +179,8 @@ mod tests
         let vresult = Car::from_is_expensive(value);
         let result: Vec<&Car> = vresult.iter().filter_map(|x| {
             match x {
-                result => Some(x),
-                _ => panic!("Error in test: Correct Variant not found in Vec for property: is_expensive"),
+                Car::A => Some(x),
+                _ => None,
             }
         }
         ).collect();
