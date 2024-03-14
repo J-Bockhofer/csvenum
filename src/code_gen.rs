@@ -13,6 +13,10 @@ mod testblock;
 
 use std::fs;
 
+mod fragments;
+
+mod gen_error;
+use gen_error::GenError;
 
 use super::reader::write_lines_to_file;
 
@@ -163,6 +167,8 @@ impl <'a> EnumModule<'a> {
             self.test_block.collect_lines_into(&mut full_lines);  
         }
         write_lines_to_file(mainfile, full_lines)?;
+
+        println!("Successfully generated @ {}", mainfile);
         Ok(())
     }
 

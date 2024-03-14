@@ -24,7 +24,7 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
     tb.close_closure(true);
     // fns for as+from_var
     if with_var_fns {
-        let fn_as_var = String::from("pub fn as_variant_str(&self) -> &'static str");
+        let fn_as_var = String::from("pub fn as_variant_str(&self) -> &str");
         tb.add_line_indented(fn_as_var);
         tb.open_closure(true);
         let linker = format!("{}_as_variant_str(self)", enumname_lc);

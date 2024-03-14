@@ -28,7 +28,7 @@ impl Car
     {
         car_get_all_variants()
     }
-    pub fn as_variant_str(&self) -> &'static str
+    pub fn as_variant_str(&self) -> &str
     {
         car_as_variant_str(self)
     }
@@ -87,7 +87,7 @@ const CAR_C_STR:&'static str = "C";
 const CAR_D_STR:&'static str = "D";
 
 /// Returns the variants name as a &str.
-pub const fn car_as_variant_str(car: &Car) -> &'static str
+pub const fn car_as_variant_str(car: &Car) -> &str
 {
     match car {
         Car::A => CAR_A_STR,
@@ -111,10 +111,10 @@ pub fn car_from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<Car>
 }
 
 // Constants for `name`
-const NAME_A: &str = "Jonda";
-const NAME_B: &str = "Gord";
-const NAME_C: &str = "Hamborghini";
-const NAME_D: &str = "Yotota";
+const NAME_A: &'static str = "Jonda";
+const NAME_B: &'static str = "Gord";
+const NAME_C: &'static str = "Hamborghini";
+const NAME_D: &'static str = "Yotota";
 
 /// Function to convert from Car to name
 pub const fn car_as_name(car: &Car) -> &str
@@ -140,10 +140,10 @@ pub fn car_from_name(name: &str) -> Option<Car>
 }
 
 // Constants for `is_expensive`
-/// Group of 2 variants with value: `false`
-const IS_EXPENSIVE_VALUE_GRP_0: [Car; 2] = [Car::A, Car::B, ];
 /// Group of 2 variants with value: `true`
-const IS_EXPENSIVE_VALUE_GRP_1: [Car; 2] = [Car::C, Car::D, ];
+const IS_EXPENSIVE_VALUE_GRP_0: [Car; 2] = [Car::C, Car::D, ];
+/// Group of 2 variants with value: `false`
+const IS_EXPENSIVE_VALUE_GRP_1: [Car; 2] = [Car::A, Car::B, ];
 
 /// Function to convert from Car to is_expensive
 pub const fn car_as_is_expensive(car: &Car) -> bool
@@ -160,9 +160,9 @@ pub const fn car_as_is_expensive(car: &Car) -> bool
 pub fn car_from_is_expensive(is_expensive: bool) -> Vec<Car>
 {
     match is_expensive {
-        false => IS_EXPENSIVE_VALUE_GRP_0.to_vec(),
-        true => IS_EXPENSIVE_VALUE_GRP_1.to_vec(),
-        //_ => vec![],
+        true => IS_EXPENSIVE_VALUE_GRP_0.to_vec(),
+        false => IS_EXPENSIVE_VALUE_GRP_1.to_vec(),
+        _ => vec![],
     }
 }
 #[cfg(test)]
@@ -191,6 +191,4 @@ mod tests
     }
 }
 
-fn main() {
-    
-}
+fn main() {}

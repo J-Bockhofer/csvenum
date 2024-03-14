@@ -96,7 +96,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
 
     // make matching functions
     tb.add_line(format!("/// Returns the variants name as a &str."));
-    let fn_decl = format!("pub const fn {}_as_variant_str({}: &{}) -> &'static str", enumname_lc, enumname_lc, enumname);
+    let fn_decl = format!("pub const fn {}_as_variant_str({}: &{}) -> &str", enumname_lc, enumname_lc, enumname);
     tb.add_line(fn_decl);
     tb.open_closure(true);
     let matchblock = MatchBlock::from_keys(enumname_lc.clone(), var_names.clone(), const_names.clone(), true);
