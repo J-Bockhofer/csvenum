@@ -44,41 +44,49 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
         let col_type = &et.parsed_types[col_type];
         let res_or_enumlc = if first_iter {&enumname_lc} else {"result"};
         let col_can_match_as_key = col_type.can_match_as_key();
-        // recreate enumbound function
-        if col_can_match_as_key && !col_has_dup_vec[col] {
-            first_iter = false;
-            tb.add_line_indented(
-                format!("let result = {}.as_{}();", res_or_enumlc, prop_lc)
+        // recreate enumbound functions
+        let is_regex = if col_type.to_typestr_no_ref().contains("Regex") {true} else {false};
+        if is_regex { 
+            // No test implemented for regex
+        } else {
+            if col_can_match_as_key && !col_has_dup_vec[col] {
+                first_iter = false;
+    
+                
+                    tb.add_line_indented(
+                        format!("let result = {}.as_{}();", res_or_enumlc, prop_lc)
+                        );
+                    tb.add_line_indented(
+                        format!("let result = {}::from_{}(result).unwrap();", enumname, prop_lc)
+                    );
+    
+            } else if col_has_dup_vec[col] && col_can_match_as_key {
+                //first_iter = false;
+                tb.add_line_indented(
+                    format!("let value = {}.as_{}();", res_or_enumlc, prop_lc)
+                    );
+                tb.add_line_indented(
+                    format!("let vresult = {}::from_{}(value);", enumname, prop_lc)
                 );
-            tb.add_line_indented(
-                format!("let result = {}::from_{}(result).unwrap();", enumname, prop_lc)
-            );
-        } else if col_has_dup_vec[col] && col_can_match_as_key {
-            //first_iter = false;
-            tb.add_line_indented(
-                format!("let value = {}.as_{}();", res_or_enumlc, prop_lc)
+                tb.add_line_indented(
+                    format!("let result: Vec<&{}> = vresult.iter().filter_map(|x| {{", enumname)
+                );            
+                tb.open_closure(false);
+                let mut minimatch = MatchBlock::new("x".to_string(), false);
+                minimatch.add_arm(format!("{}", var_name), "Some(x)".to_string());
+                minimatch.add_arm("_".to_string(), "None".to_string());
+    
+                tb.append_lines(minimatch.to_lines());
+                tb.close_closure(true);
+                tb.add_line_indented(String::from(").collect();"));      
+                tb.add_line_indented(
+                    String::from("let result = result[0].clone();")
+                );     
+                tb.add_line_indented(
+                    format!("assert_eq!(value, result.as_{}());", prop_lc)
                 );
-            tb.add_line_indented(
-                format!("let vresult = {}::from_{}(value);", enumname, prop_lc)
-            );
-            tb.add_line_indented(
-                format!("let result: Vec<&{}> = vresult.iter().filter_map(|x| {{", enumname)
-            );            
-            tb.open_closure(false);
-            let mut minimatch = MatchBlock::new("x".to_string(), false);
-            minimatch.add_arm(format!("{}", var_name), "Some(x)".to_string());
-            minimatch.add_arm("_".to_string(), "None".to_string());
-
-            tb.append_lines(minimatch.to_lines());
-            tb.close_closure(true);
-            tb.add_line_indented(String::from(").collect();"));      
-            tb.add_line_indented(
-                String::from("let result = result[0].clone();")
-            );     
-            tb.add_line_indented(
-                format!("assert_eq!(value, result.as_{}());", prop_lc)
-            );
-
+    
+            }
         }
         col += 1;
 

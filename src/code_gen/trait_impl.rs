@@ -42,7 +42,9 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
         let prop_name = &props[col];
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
-        let typeprefix = if no_ref_type == "str".to_string() {"&"} else {""};
+        let is_regex = if no_ref_type == "Regex".to_string() {true} else {false};
+
+        let typeprefix = if no_ref_type == "str".to_string() || is_regex {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
         tb.add_line_indented(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
@@ -56,14 +58,18 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
 
         if col_type.can_match_as_key() {
             
-            let fromfn_hdr = if col_has_dup_vec[col] {format!(
-                "pub fn from_{}({}: {}) -> Vec<Self>", prop_lc, prop_lc, col_type.to_typestr()
+            let twrapper = if col_has_dup_vec[col] { "Vec"} else {"Option"};
+
+            let fromfn_hdr = if !is_regex {format!(
+                "pub fn from_{}({}: {}) -> {}<Self>", prop_lc, prop_lc, col_type.to_typestr(), twrapper
             )} else {format!(
-                "pub fn from_{}({}: {}) -> Option<Self>", prop_lc, prop_lc, col_type.to_typestr()
+                "pub fn from_{}_is_match(haystack: &str) -> {}<Self>", prop_lc,  twrapper
             )};
             tb.add_line_indented(fromfn_hdr);
             tb.open_closure(true);
-            let linker = format!("{}_from_{}({})", &enumname_lc, prop_lc, prop_lc);
+            let linker = if !is_regex { format!("{}_from_{}({})", &enumname_lc, prop_lc, prop_lc)} else {
+                format!("{}_from_{}_is_match(haystack)", &enumname_lc, prop_lc)
+            };
             tb.add_line_indented(linker);
             tb.close_closure(true); 
         }
@@ -78,6 +84,7 @@ pub fn generate_impl_fmt_display(et: &EnumTable) -> TextBlock {
     let enumname = et.get_name();
     let props = et.get_properties();
     let variants = et.get_variants();
+    let rtypes = &et.parsed_types;
     //let enumname_lc = enumname.to_ascii_lowercase();
 
     tb.add_line(format!("impl std::fmt::Display for {}", enumname));
@@ -97,11 +104,16 @@ pub fn generate_impl_fmt_display(et: &EnumTable) -> TextBlock {
         let mut val_str = String::new();
         for col in 0..props.len() {
             let prop = &props[col];
-            let valstr = et.get_value_by_col_row(col, row).unwrap();
+            let typ = &rtypes[col];
+            let mut valstr = et.get_value_by_col_row(col, row).unwrap();
+            if typ.to_typestr_no_ref() == "Regex".to_string() {
+                valstr = escape_regex_chars(&valstr);
+            }
+
             val_str = format!("{}, {} = {} ", val_str, prop, valstr)
             //val_str += &valstr;
         } // writeln!(f, "{}", line)?;
-        matchblk.add_arm(var_name, format!("writeln!(f, \"{{}}{}\", self.as_variant_str())?", val_str,))
+        matchblk.add_arm(var_name, format!("writeln!(f, \"{{}}{}\", self.as_variant_str())?", val_str))
 
     }
     tb.append_lines(matchblk.to_lines());
@@ -110,4 +122,31 @@ pub fn generate_impl_fmt_display(et: &EnumTable) -> TextBlock {
     tb.close_closure(true); 
     tb.close_closure(true); 
     tb
+}
+
+
+
+// dumb helper fn to handle regex string embedding while function handles are not easily available here.
+fn escape_regex_chars(s: &str) -> String {
+    let mut escaped = String::new();
+    for c in s.chars() {
+        match c {
+             '\\' => {
+                escaped.push('\\');
+                escaped.push(c);
+            }
+            '{' => {
+                escaped.push('{');
+                escaped.push(c);                
+            },
+            '}' => {
+                escaped.push('}');
+                escaped.push(c);                
+            }
+            _ => {
+                escaped.push(c);
+            }
+        }
+    }
+    escaped
 }

@@ -5,6 +5,7 @@
 CLI to generate Rust enums with associated constants from a csv-table. 
 
 
+
 ## Why?
 
 If you have ever needed to declare a lot of constants you will know that it may require looking at a dataset and copying the values to code.
@@ -89,6 +90,8 @@ BRA
 
 See the table format, CLI options and the list of features below for details.
 
+Output examples are found [here](https://github.com/J-Bockhofer/csvenum/tree/main/examples).
+
 
 ## Table format
 
@@ -107,7 +110,7 @@ Example
 ```
 ENUM,      &str,       usize,      [usize; 3]        <-- Column types
 
-GPIOpin,    Address,    Value,      XY               <-- Enum name followed by the property names
+GPIOpin,    Address,    Value,      Numbers          <-- Enum name followed by the property names
 
 PIN0,       0x00,       42,         [1,5,7]          <-- Variant name and associated values
 PIN1,       0x02,       56,         [8,4,2]
@@ -117,7 +120,7 @@ PIN2,       0x04,       68,         [12,3,2]
 
 Note that you can use commas in nested fields when they are enclosed with the appropiate symbol.
 
-- Strings : `""`
+- Strings/Regex : `""`
 
 - Tuples : `()`
 
@@ -125,7 +128,7 @@ Note that you can use commas in nested fields when they are enclosed with the ap
 
 Most software will export fields with nested commas with quotes, so a tuple would be "(1,2)". This is perfectly fine for the parser.
 
-Duplicate values in a column will be collected to an array that holds all corresponding variants. 
+Duplicate values in a column will be collected into an array that holds all corresponding variants. 
 
 For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
 
@@ -168,17 +171,32 @@ Options:
 
 ## Features
 
+Generated Code:
 
 - (Always) - Declaration of the enum with the given variants and doc-strings that include all properties + values
 
 - (Option, true) - Variant name as and from str functions + std::fmt::Display impl that prints the name and all associated values to a string. 
 
-- (Always) - Declares property values as constants and as and from conversion function between them. You can opt to split the properties into separate files.
+- (Always) - Declares property values as constants and "as" and "from" conversion function between them. You can opt to split the properties into separate files.
 
 - (Option, true) - Generates an impl block for the enum that contains links to the property conversion functions, also generates a test module.
 
 - (Always) - Generates a get_all_variants function -> [MyEnum; N_variants]
 
+
+Available Types:
+
+- Const types: 
+        - numeric types 
+        - &str
+        - tuples 
+        - arrays
+
+- Regex: 
+        - will create a const &str and a static `OnceLock<Regex>` 
+        - "as"-method will return &Regex
+        - "from"-method iterates over the associated regexes and returns the first match, i.e the matching variant
+        - nested Regex are not planned
 
 
 ## Known Issues
@@ -198,7 +216,7 @@ Options:
 
 4. Option on data with missing values.
 
-5. Static HashMaps for large datasets.
+5. Static [HashMaps](https://docs.rs/phf/latest/phf/) for larger datasets.
 
 
 ### Why not as a macro?
@@ -213,7 +231,7 @@ Having your enum transpiled from a .csv further lends itself to the vast tooling
 
 On a personal note, I find it easier having to check just a single location for data validity, rather than scattered across multiple declarations.
 
-Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, also one less dependancy.
+Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, so one less dependancy.
 
 
 

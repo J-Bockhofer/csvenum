@@ -27,7 +27,7 @@ use self::propfns::generate_property_fns;
 use self::testblock::generate_testblock;
 use self::trait_impl::{generate_impl_block, generate_impl_fmt_display};
 
-use super::EnumTable;
+use super::{EnumTable, RTypeTrait};
 
 use super::EnumOptions;
 
@@ -57,13 +57,24 @@ pub struct EnumModule<'a> {
 impl <'a> EnumModule<'a> {
     pub fn new(et: &EnumTable, options: &'a EnumOptions) -> Self {
         let make_variant_str_fns = options.gen_variant_str_fns;
+        let mut imports: Vec<String> = vec![];
+        for types in &et.parsed_types {
+            if types.to_typestr_no_ref() == "Regex" {
+                imports.push("extern crate regex;".to_string());
+                imports.push("use regex::Regex;".to_string());
+                imports.push("use std::sync::OnceLock;".to_string());
+
+                break;
+            }
+        }
+
 
         EnumModule { 
             options,
             //rootfile, 
             enumname: et.get_name().to_string(),
             properties: et.get_properties().to_vec(),
-            imports: vec![], 
+            imports, 
             enumdeclaration: generate_enum_decl(&et), 
             get_all_variants_fn: generate_get_all_variants_fn(&et), 
             variants_as_str_module: if make_variant_str_fns {generate_variant_str_fns(&et)} else {TextBlock::new()},

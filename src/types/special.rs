@@ -9,6 +9,7 @@ pub use enumtype::EnumType;
 pub enum SpecialType {
     // the enum variant will contain the name.. or to separate it be make a named RType, which will contain building functions, expressions and declarations 
     Enum(String), // no just use the trait and store name here
+    // Regex should return a as &Regex function and and is match function that takes self and a string and matches against it.
     Regex,
     /// When a property is of type singular bool then collect all variants with true and false as const array and return as Vec in match function
     Bool,
@@ -38,7 +39,7 @@ impl RTypeTrait for SpecialType {
         match self {
             Self::Enum(x) => {x.to_owned()},
             Self::Bool => {"bool".to_string()},
-            Self::Regex => {todo!("Regex not impl yet")},
+            Self::Regex => {"Regex".to_string()},
         }
     }
     fn to_typestr_no_ref(&self) -> String {
@@ -59,6 +60,7 @@ impl RTypeTrait for SpecialType {
     fn is_const(&self) -> bool {
         match self {
             Self::Bool => {true},
+            Self::Regex => {true}, // will for now be true to provide a simple method until static types are fully implemented
             _ => {false},
         }        
     }
@@ -95,7 +97,8 @@ impl RTypeTrait for SpecialType {
                 } else {valuestr.to_string()}
             },
             Self::Regex => {
-                todo!("Impl wrapping for value of type regex with OnceLock get_or_init ...");
+                format!("r\"{}\"", valuestr)
+                //todo!("Impl wrapping for value of type regex with OnceLock get_or_init ...");
             },
             Self::Bool => {
                 let valstr = valuestr.trim();

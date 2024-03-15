@@ -2,6 +2,10 @@
 use std::collections::{HashMap,HashSet};
 use thiserror::Error;
 
+#[allow(dead_code)]
+mod structs;
+use structs::Property;
+
 #[derive(Error, Debug, PartialEq)]
 pub enum TableError {
     #[error("Requested variant with name: {0} does not exist.")]
@@ -51,6 +55,7 @@ use crate::{RType, RTypeTrait};
 #[derive(Debug)]
 pub struct EnumTable {
     enumname: String,
+    pub tprops: Vec<Property>,
     types: Vec<String>,
     properties: Vec<String>,
     variants: Vec<String>,
@@ -64,7 +69,8 @@ pub struct EnumTable {
 impl EnumTable {
     pub fn new() -> Self {
         EnumTable { 
-            enumname: String::new(), 
+            enumname: String::new(),
+            tprops: Vec::new(),
             types: Vec::new(), 
             properties: Vec::new(), 
             variants: Vec::new(), 

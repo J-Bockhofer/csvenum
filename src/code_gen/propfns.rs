@@ -1,16 +1,6 @@
-use crate::{RType, RTypeTrait};
+use crate::{RTypeTrait};
 
 use super::{EnumTable, TextBlock, codeblocks::MatchBlock};
-
-
-#[allow(dead_code)]
-pub struct Property {
-    pub name: String,
-    pub rtype: RType,
-
-
-}
-
 
 
 /// Tuple of property and consts + fns, takes for granted that all passed values are of constant type
@@ -31,7 +21,8 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         let prop_name = &props[col];
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
-        let typeprefix = if no_ref_type == "str".to_string() {"&"} else {""};
+        let col_is_regex = if no_ref_type == "Regex".to_string() {true} else {false};
+        let typeprefix = if no_ref_type == "str".to_string() || col_is_regex {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
 
         let col_has_dup = col_has_dup_vec[col];
@@ -40,9 +31,11 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         let mut astb = TextBlock::new();
         let mut fromtb = TextBlock::new();
     
+        let fn_const = if col_is_regex {""} else {"const "};
+
         astb.add_line(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
-            "pub const fn {}_as_{}({}: &{}) -> {}{}", &enumname_lc, prop_lc, enumname_lc, enumname, typeprefix, no_ref_type
+            "pub {}fn {}_as_{}({}: &{}) -> {}{}", fn_const, &enumname_lc, &prop_lc, enumname_lc, enumname, typeprefix, no_ref_type
         );
         astb.add_line(asfn_hdr);
         astb.open_closure(true);
@@ -50,17 +43,22 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         fromtb.add_line(format!("/// Function to convert from {} to {}", prop_name, enumname));
         let mut asmatchb = MatchBlock::new(enumname_lc.to_string(), true);
 
-        let fromfn_hdr = if col_has_dup {
+        let twrapper = if col_has_dup { "Vec"} else {"Option"};
+
+
+            // if col is regex the from function should not take a regex, that makes no sense, it should take a string and return the type that matches the associated regex
+            // i do want a third function that checks if a string is valid for a given variant, this is a short one and goes: fn(&self, &str) -> true self.as_regex.is_match(&str)
+        let fromfn_hdr = if col_is_regex {
             format!(
-            "pub fn {}_from_{}({}: {}) -> Vec<{}>", enumname_lc, prop_lc, prop_lc, col_type.to_typestr(), enumname)            
+            "pub fn {}_from_{}_is_match(haystack: &str) -> {}<{}>", enumname_lc, &prop_lc, twrapper, enumname)          
         } else {
             format!(
-            "pub fn {}_from_{}({}: {}) -> Option<{}>", enumname_lc, prop_lc, prop_lc, col_type.to_typestr(), enumname)
+            "pub fn {}_from_{}({}: {}) -> {}<{}>", enumname_lc, &prop_lc, &prop_lc, col_type.to_typestr(), twrapper, enumname)   
         } ;
         fromtb.add_line(fromfn_hdr);
         fromtb.open_closure(true);
 
-        let mut frommatchb = MatchBlock::new(prop_lc, true);
+        let mut frommatchb = MatchBlock::new(&prop_lc, true);
 
         let mut pblock = TextBlock::new();
         pblock.add_line(String::new());
@@ -77,13 +75,34 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                 let typeprefix = if no_ref_type == "str".to_string() {"&'static "} else {""};
     
     
-                let const_decl = format!(
-                    "const {}: {}{} = {};", const_name, typeprefix, no_ref_type, wr_val
-                );
-                pblock.add_line(const_decl);
-                
-                asmatchb.add_arm(variant_name.clone(), const_name.clone());
-                frommatchb.add_arm(const_name, format!("Some({})", &variant_name));
+                // Constant declaration
+                if col_is_regex {
+                    pblock.add_line(format!(
+                        "const {}: &'static str = {};", const_name.clone()+"_REGEX_STR", wr_val));                     
+                    pblock.add_line(format!(
+                        "static {}: OnceLock<{}> = OnceLock::new();", const_name.clone()+"_REGEX",no_ref_type ));                   
+                } else {
+                    pblock.add_line(format!(
+                        "const {}: {}{} = {};", const_name, typeprefix, no_ref_type, wr_val));
+                };
+                if !col_is_regex {
+                    asmatchb.add_arm(variant_name.clone(), const_name.clone());
+                    frommatchb.add_arm(const_name, format!("Some({})", &variant_name));
+                } else {
+                    let re_getter = format!(
+                        "{}.get_or_init(||Regex::new({}).expect(\"Failed to compile regex for property: {}, variant: {}\"))", 
+                        const_name.clone()+"_REGEX", 
+                        const_name.clone()+"_REGEX_STR", 
+                        prop_name, 
+                        var_name
+                    );
+                    asmatchb.add_arm(variant_name.clone(), re_getter.clone());
+
+/*                     fromtb.add_line(format!("let variants = {}_get_all_variants();",enumname_lc));
+                    let re_matcher = re_getter + "is" */
+
+                }
+
     
                 //const_names.push(const_name);
             }
@@ -129,11 +148,24 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
 
 
 
-        let from_lines = frommatchb.to_lines();
         let as_lines = asmatchb.to_lines();
-
-        fromtb.append_lines(from_lines);
         astb.append_lines(as_lines);
+
+        if !col_is_regex {
+            fromtb.append_lines(frommatchb.to_lines());
+        } else {
+            fromtb.add_line_indented(format!("let variants = {}_get_all_variants();",enumname_lc));
+            fromtb.add_line_indented("for variant in variants {");
+            fromtb.open_closure(false);
+            fromtb.add_line_indented(format!(
+                "if {}_as_{}(&variant).is_match(haystack) {{return Some(variant)}}", &enumname_lc, prop_lc
+            ));
+            fromtb.close_closure(true);
+            fromtb.add_line_indented("None");
+        }
+        
+
+        
 
         fromtb.close_closure(true);
         astb.close_closure(true);

@@ -182,6 +182,7 @@ impl RTypeTrait for RType {
 
         match typestr {
             "bool" | "boolean" | "Bool" | "Boolean" => return Ok(Self::Special(reference, SpecialType::Bool)),
+            "regex" | "Regex" => return Ok(Self::Special(reference, SpecialType::Regex)),
             _ => {} // not a bool,
         }
 
@@ -207,7 +208,7 @@ impl RTypeTrait for RType {
         if let Ok(container) = ContainerType::from_typestr(&typestr) {
             return Ok(RType::Container(reference, container));
         }
-        // find if reference or lifetime before doing anything else.. no each type will have to decide for itself... unsolved f it
+        //
         Err(TypeError::RTypeUnknown(typestr.to_string()))
     }
 
