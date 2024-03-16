@@ -84,10 +84,16 @@ impl RTypeTrait for SpecialType {
     }
 
     fn get_depth(&self, counter: usize) -> usize {
-        counter + 0
+        match self {
+            Self::Regex => {counter + 2},
+            _ => {counter + 0}
+        }
     }
     fn get_breadth(&self, counter: usize) -> usize {
-        counter + 1
+        match self {
+            Self::Regex => {counter + 5},
+            _ => {counter + 0}
+        }
     }
     fn wrap_valuestr(&self, valuestr: &str) -> String {
         match self {

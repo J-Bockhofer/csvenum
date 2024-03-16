@@ -43,7 +43,7 @@ impl TextBlock {
     }
     pub fn add_line_indented<T: AsRef<str>>(&mut self, line: T) {
 
-        self.lines.push(indent_string(line.as_ref().to_string(), TABWIDTH * self.closure_depth) )
+        self.lines.push(indent_string(line.as_ref(), TABWIDTH * self.closure_depth) )
     }
 
     pub fn collect_lines_into(&self, dest: &mut Vec<String>) {

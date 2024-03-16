@@ -14,7 +14,7 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
 
     if num_cols == 1 {
         let single_type = &et.parsed_types[0];
-        let is_regex = if single_type.to_typestr_no_ref().contains("Regex") {true} else {false};
+        let is_regex = single_type.to_typestr_no_ref().contains("Regex");
         if is_regex {
             // if our only type is a regex we dont return a test block
             return TextBlock::new();
@@ -84,16 +84,14 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
                     format!("let result: Vec<&{}> = vresult.iter().filter_map(|x| {{", enumname)
                 );            
                 tb.open_closure(false);
-                let mut minimatch = MatchBlock::new("x".to_string(), false);
-                minimatch.add_arm(format!("{}", var_name), "Some(x)".to_string());
-                minimatch.add_arm("_".to_string(), "None".to_string());
+                let mut minimatch = MatchBlock::new("x", false);
+                minimatch.add_arm(&var_name, "Some(x)");
+                minimatch.add_arm("_", "None");
     
                 tb.append_lines(minimatch.to_lines());
                 tb.close_closure(true);
-                tb.add_line_indented(String::from(").collect();"));      
-                tb.add_line_indented(
-                    String::from("let result = result[0].clone();")
-                );     
+                tb.add_line_indented(").collect();");      
+                tb.add_line_indented("let result = result[0].clone();");     
                 tb.add_line_indented(
                     format!("assert_eq!(value, result.as_{}());", prop_lc)
                 );

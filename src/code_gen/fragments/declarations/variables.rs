@@ -2,7 +2,7 @@
 use std::{borrow::Cow, fmt};
 use super::{GenError, Visibility};
 
-
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Eq, PartialEq)]
 pub enum VarDeclareAs {
     LET,
@@ -55,43 +55,43 @@ impl<'a> VarDeclaration<'a> {
             var_type: var_type.into(), 
             var_eq: var_eq.into() }
     }
-    fn as_const(mut self) -> Self {
+    fn as_const(&mut self) -> &Self {
         self.var_as = VarDeclareAs::CONST;
         self
     }
-    fn as_static(mut self) -> Self {
+    fn as_static(&mut self) -> &Self {
         self.var_as = VarDeclareAs::STATIC;
         self
     }
-    fn as_let(mut self) -> Self {
+    fn as_let(&mut self) -> &Self {
         self.var_as = VarDeclareAs::LET;
         self
     }
-    fn as_pub(mut self) -> Self {
+    fn as_pub(&mut self) -> &Self {
         self.vis = Visibility::PUB;
         self
     }
-    fn as_priv(mut self) -> Self {
+    fn as_priv(&mut self) -> &Self {
         self.vis = Visibility::PRIV;
         self        
     }
-    fn as_mut(mut self) -> Self {
+    fn as_mut(&mut self) -> &Self {
         self.is_mut = true;
         self        
     }
-    fn as_immut(mut self) -> Self {
+    fn as_immut(&mut self) -> &Self {
         self.is_mut = false;
         self        
     }
-    fn with_name<T: Into<Cow<'a, str>>>(mut self, var_name: T) -> Self {
+    fn with_name<T: Into<Cow<'a, str>>>(&mut self, var_name: T) -> &Self {
         self.var_name = var_name.into();
         self
     }
-    fn with_type<T: Into<Cow<'a, str>>>(mut self, var_type: T) -> Self {
+    fn with_type<T: Into<Cow<'a, str>>>(&mut self, var_type: T) -> &Self {
         self.var_type = var_type.into();
         self
     }
-    fn with_value<T: Into<Cow<'a, str>>>(mut self, var_eq: T) -> Self {
+    fn with_value<T: Into<Cow<'a, str>>>(&mut self, var_eq: T) -> &Self {
         self.var_eq = var_eq.into();
         self
     }

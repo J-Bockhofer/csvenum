@@ -119,6 +119,7 @@ pub fn animals_from_id_regex_is_match(haystack: &str) -> Option<Animals>
     None
 }
 
+
 // not generated, just here to provide a usage example 
 fn main() {
     let an_animal_with_id = "cat1234";

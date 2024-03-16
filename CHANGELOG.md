@@ -1,7 +1,7 @@
 
 
 
-# 0.1.3 (2024-03-16)
+# 0.1.3 (2024-03-17)
 - Added Regex to valid types (no nesting, must be unique per property).
 - Declares all_variants_array as static, as well as arrays of value duplicates.
 - Fixed `-o` not working, now works for dirs and files.

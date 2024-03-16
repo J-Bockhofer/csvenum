@@ -21,8 +21,8 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         let prop_name = &props[col];
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
-        let col_is_regex = if no_ref_type == "Regex".to_string() {true} else {false};
-        let typeprefix = if no_ref_type == "str".to_string() || col_is_regex {"&"} else {""};
+        let col_is_regex = &no_ref_type == "Regex";
+        let typeprefix = if &no_ref_type == "str" || col_is_regex {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
 
         let col_typestr = format!("{}{}", typeprefix, no_ref_type);
@@ -43,7 +43,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         astb.open_closure(true);
 
         fromtb.add_line(format!("/// Function to convert from {} to {}", prop_name, enumname));
-        let mut asmatchb = MatchBlock::new(enumname_lc.to_string(), true);
+        let mut asmatchb = MatchBlock::new(&enumname_lc, true);
 
 
 
@@ -79,7 +79,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                 let valstr = &et.get_value_by_col_row(col, row).unwrap();
                 let wr_val = col_type.wrap_valuestr(valstr);
                 let variant_name = format!("{}::{}", enumname, var_name);
-                let typeprefix = if no_ref_type == "str".to_string() {"&'static "} else {""};
+                let typeprefix = if &no_ref_type == "str" {"&'static "} else {""};
     
     
                 // Constant declaration
@@ -133,7 +133,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                 let const_decl = format!("const {}: &'static {} = &{}", const_name, const_type, collected_variants);
                 pblock.add_line(const_doc);
                 pblock.add_line(const_decl);
-                frommatchb.add_arm(format!("{}", col_type.wrap_valuestr(&val_grp.0)), format!("{}", const_name) );
+                frommatchb.add_arm(col_type.wrap_valuestr(&val_grp.0), &const_name) ;
 
 
                 grp_cnt += 1;

@@ -121,7 +121,7 @@ impl TableParser {
         enumtable.check_duplicate_variants()?;
         enumtable.check_column_duplicates();
         //enumtable.check_duplicates()?;
-        enumtable.make_duplicate_map();
+        enumtable.make_duplicate_map()?;
         enumtable.check_valid_values()?;
         enumtable.check_valid_types_for_code()?;
         

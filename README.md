@@ -10,9 +10,7 @@ CLI to generate Rust enums with associated constants from a csv-table.
 
 If you have ever needed to declare a lot of constants you will know that it may require looking at a dataset and copying the values to code.
 
-Not much fun, and LLMs still tend to have a short memory, making consistent results a challenge.
-
-So here's a code-gen to assist in creating enums with associated constants. Like route or query parameter bindings for an API.
+So here's a code-gen to assist in creating enums with associated constants.
 
 Just declare a table in a .csv, generate and you're done.
 
@@ -25,7 +23,7 @@ If you want to associate data with a pre-existing enum, you might want to check 
 
 Since this crate is meant to be a tool for speeding up Rust development, it is available as a `cargo install`.
 
-Note that it is in active development and there might still be bugs, so please check back for updates and report any issues you may find.
+Note that it is in active development, so please check back for updates and report any issues you may find.
 
 
 ```console
@@ -86,7 +84,7 @@ BRA
 
 See the table format, CLI options and the list of features below for details.
 
-Output examples are found [here](https://github.com/J-Bockhofer/csvenum/tree/main/examples).
+Output examples can be found [here](https://github.com/J-Bockhofer/csvenum/tree/main/examples).
 
 
 ## Table format
@@ -189,12 +187,12 @@ Available Types:
         - arrays
 
 - Regex: 
-        - relies on the regex [crate](https://crates.io/crates/regex) being present `cargo add regex`
+        - relies on the regex [crate](https://crates.io/crates/regex) being present, `cargo add regex`
         - will create a const &str and a static `OnceLock<Regex>` 
         - "as"-method will return &Regex
         - "from"-method iterates over the associated regexes and returns the first match, i.e the matching variant
-        - nested Regex are not planned
-
+        - nested Regex, i.e. Regex in tuples or arrays are not planned
+        - can't have duplicates for a given column/property 
 
 ## Known Issues
 
@@ -209,7 +207,7 @@ Available Types:
 
 2. Generate FromStr impl to check all associated string constants.
 
-3. Provide `OnceLock` or `Lazy` wrappers for non-const statics.  
+3. Provide `OnceLock` or similar wrappers for non-const statics.  
 
 4. Option on data with missing values.
 
@@ -230,7 +228,7 @@ On a personal note, I find it easier having to check just a single location for 
 
 Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, so one less dependancy.
 
-It also allows for you to easily take parts out that you don't need anymore, or add/fix specific implementation for your needs.
+It also allows for you to easily take parts out that you don't need anymore, or add/modify specific implementations for your needs.
 
 
 

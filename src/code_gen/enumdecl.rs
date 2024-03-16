@@ -76,7 +76,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
     let enumname = et.get_name();
     let enumname_lc = enumname.to_ascii_lowercase();
     tb.add_line(String::new());
-    tb.add_line(format!("// Variant string representation."));
+    tb.add_line("// Variant string representation.");
 
     let mut const_names: Vec<String> = vec![];
     let mut var_names: Vec<String> = vec![];
@@ -95,7 +95,7 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
     tb.add_line(String::new());
 
     // make matching functions
-    tb.add_line(format!("/// Returns the variants name as a &str."));
+    tb.add_line("/// Returns the variants name as a &str.");
     let fn_decl = format!("pub const fn {}_as_variant_str({}: &{}) -> &str", enumname_lc, enumname_lc, enumname);
     tb.add_line(fn_decl);
     tb.open_closure(true);
@@ -105,16 +105,16 @@ pub fn generate_variant_str_fns(et: &EnumTable) -> TextBlock {
 
     tb.add_line(String::new());
 
-    tb.add_line(format!("/// Returns the enum given a string that might represent the variant's name."));
+    tb.add_line("/// Returns the enum given a string that might represent the variant's name.");
     let fn_decl = format!("pub fn {}_from_variant_str<T: AsRef<str>>(variantstr: T) -> Option<{}>", enumname_lc, enumname);
     tb.add_line(fn_decl);
     tb.open_closure(true);
-    tb.add_line_indented(String::from("let variantstr = variantstr.as_ref();"));
-    let mut matchblock = MatchBlock::new("variantstr".to_string(), true);
+    tb.add_line_indented("let variantstr = variantstr.as_ref();");
+    let mut matchblock = MatchBlock::new("variantstr", true);
     for i in 0..var_names.len() {
         matchblock.add_arm(const_names[i].clone(), format!("Some({})", var_names[i]));
     }
-    matchblock.add_arm("_".to_string(), "Option::None".to_string());
+    matchblock.add_arm("_", "Option::None");
     tb.append_lines(matchblock.to_lines());
     tb.close_closure(true);
     tb

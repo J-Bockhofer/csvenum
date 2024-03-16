@@ -21,7 +21,7 @@ impl ArrayType {
     /// 
     /// 
     /// rtype = type T of the array [T; N]
-    pub fn value_is_valid(valuestr: &str, rtype: &Box<RType>, size: &usize) -> bool {
+    pub fn value_is_valid(valuestr: &str, rtype: &RType, size: &usize) -> bool {
         //let aaa: [Vec<String>; 3] = [vec![], vec![], vec![]];
         let values = NestedValueParser::parse_nested_str(valuestr, '[', true);
 
@@ -40,7 +40,7 @@ impl ArrayType {
         true
     }
 
-    pub fn wrap_valuestr(valuestr: &str, rtype: &Box<RType>) -> String {
+    pub fn wrap_valuestr(valuestr: &str, rtype: &RType) -> String {
         let values = NestedValueParser::parse_nested_str(valuestr, '[', true);
 
         let mut wrapped_str = String::from("[");

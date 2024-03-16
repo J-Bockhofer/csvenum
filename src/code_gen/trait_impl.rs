@@ -42,10 +42,10 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
         let prop_name = &props[col];
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
-        let is_regex = if no_ref_type == "Regex".to_string() {true} else {false};
+        let is_regex = &no_ref_type == "Regex";
         let has_dup = col_has_dup_vec[col];
 
-        let typeprefix = if no_ref_type == "str".to_string() || is_regex {"&"} else {""};
+        let typeprefix = if &no_ref_type == "str" || is_regex {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
         tb.add_line_indented(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
@@ -96,13 +96,13 @@ pub fn generate_impl_fmt_display(et: &EnumTable) -> TextBlock {
 
     tb.add_line(format!("impl std::fmt::Display for {}", enumname));
     tb.open_closure(true);  
-    tb.add_line_indented(format!("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result ")); 
+    tb.add_line_indented("fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result "); 
 
     tb.open_closure(true); 
 
     // create a matcher to print to associated values for self::variant
 
-    let mut matchblk = MatchBlock::new("self".to_string(), true);
+    let mut matchblk = MatchBlock::new("self", true);
     //matchblk.set_indent_depth(tb.get_current_depth());
 
     for row in 0..variants.len() {
@@ -113,7 +113,7 @@ pub fn generate_impl_fmt_display(et: &EnumTable) -> TextBlock {
             let prop = &props[col];
             let typ = &rtypes[col];
             let mut valstr = et.get_value_by_col_row(col, row).unwrap();
-            if typ.to_typestr_no_ref() == "Regex".to_string() {
+            if &typ.to_typestr_no_ref() == "Regex" {
                 valstr = escape_regex_chars(&valstr);
             }
 

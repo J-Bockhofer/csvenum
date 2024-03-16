@@ -24,8 +24,10 @@ pub enum TableError {
     DataEmpty,
     #[error("Missing feature: {0}")]
     MissingFeature(String),
-    #[error("Duplicate cariant detected: {0} in row: {1}.")]
+    #[error("Duplicate variant detected: {0} in row: {1}.")]
     DuplicateVariant(String, usize),
+    #[error("Duplicate value detected for a type that does not allow for duplicates. Type: {0}, Property{1}.")]
+    DuplicateValueForRestrictedType(String, String),
 
 }
 
@@ -184,11 +186,13 @@ impl EnumTable {
         Ok(())
     }
 
-    pub fn make_duplicate_map(&mut self) {
+    pub fn make_duplicate_map(&mut self) -> Result<(), TableError> {
         let mut col_val_grp: Vec<Vec<(String, Vec<String>)>> = vec![];
         let num_cols = self.properties.len();
         for i in 0..num_cols {
             if self.col_has_duplicates[i] {
+                let col_type = self.parsed_types[i].to_typestr_no_ref();
+                if &col_type == "Regex" {return Err(TableError::DuplicateValueForRestrictedType(col_type, self.properties[i].clone()))}
                 let unique_groupings = group_variants_by_value(self.variants.clone(), self.data[i].clone());
                 col_val_grp.push(unique_groupings);
             } else {
@@ -196,6 +200,7 @@ impl EnumTable {
             }
         }
         self.col_unique_value_maps = col_val_grp;
+        Ok(())
     }
 
     pub fn get_duplicate_value_map(&self) -> &Vec<Vec<(String, Vec<String>)>> {
@@ -212,10 +217,10 @@ impl EnumTable {
     }    
     pub fn get_value_by_prop_var(&self, property: &str, variant: &str) -> Result<String, TableError> {
         let prop_idx = self.get_col_of_property(property);
-        let col_idx = if prop_idx.is_none() {return Err(TableError::NoPropertyWithName(property.to_string()))} else {prop_idx.unwrap()};
+        let col_idx = if let Some(idx) = prop_idx {idx} else {return Err(TableError::NoPropertyWithName(property.to_string()))};
         let var_idx = self.get_row_of_variant(variant);
-        let row_idx = if var_idx.is_none() {return Err(TableError::NoVariantWithName(variant.to_string()))} else {var_idx.unwrap()};
-        Ok(self.get_value_by_col_row(col_idx, row_idx)?)
+        let row_idx = if let Some(idx) = var_idx {idx} else {return Err(TableError::NoVariantWithName(variant.to_string()))};
+        self.get_value_by_col_row(col_idx, row_idx)
     }
     // Ok if all good, else TableError::InvalidValueForPropertyWithTypeAtRow(String, String, String, usize)
     pub fn check_valid_values(&self) -> Result<(), TableError> {
@@ -249,7 +254,7 @@ impl EnumTable {
     }
     pub fn all_types_depth_smaller_than(&self, rhs: usize) -> bool {
         for rtype in &self.parsed_types {
-            if rtype.get_depth(0) > rhs as usize {return false;}
+            if rtype.get_depth(0) > rhs {return false;}
         }
         true     
     }

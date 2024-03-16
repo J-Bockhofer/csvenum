@@ -6,7 +6,8 @@ pub use variables::{VarDeclaration, VarDeclareAs};
 #[allow(dead_code, unused_imports)]
 mod functions;
 
-#[allow(dead_code)]
+
+#[allow(dead_code, clippy::upper_case_acronyms)]
 #[derive(Eq, PartialEq)]
 pub enum Visibility {
     PUB,
@@ -15,10 +16,7 @@ pub enum Visibility {
 
 impl fmt::Display for Visibility {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PUB => write!(f, "pub")?,
-            _ => {}
-        }
+        if self == &Self::PUB { write!(f, "pub")? }
         Ok(())
     }
 } 

@@ -33,10 +33,10 @@ impl MatchBlock {
     pub fn set_indent_depth(&mut self, depth: usize) {
         self.indent_depth = depth;
     }
-    pub fn add_arm<T: AsRef<str>>(&mut self, left: T, right: T) {
+    pub fn add_arm<T: AsRef<str>, R:AsRef<str>>(&mut self, left: T, right: R) {
         self.arms_lh.push(left.as_ref().to_string());
         self.arms_rh.push(right.as_ref().to_string());
-        self.num_arms = self.num_arms + 1;
+        self.num_arms += 1;
     }
 
 
@@ -58,7 +58,7 @@ impl MatchBlock {
                 "{} => {},", self.arms_lh[i], self.arms_rh[i]
             ), self.tabwidth  + self_indent ));
         }
-        lines.push(indent_string(format!("}}"), self_indent));     
+        lines.push(indent_string("}", self_indent));     
     }
     pub fn to_lines(&self) -> Vec<String> {
         let mut lines: Vec<String> = vec![];

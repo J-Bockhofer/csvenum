@@ -76,13 +76,13 @@ impl <'a> EnumModule<'a> {
             enumname: et.get_name().to_string(),
             properties: et.get_properties().to_vec(),
             imports, 
-            enumdeclaration: generate_enum_decl(&et), 
-            get_all_variants_fn: generate_get_all_variants_fn(&et), 
-            variants_as_str_module: if make_variant_str_fns {generate_variant_str_fns(&et)} else {TextBlock::new()},
-            propfn_blocks: generate_property_fns(&et),
-            impl_block:  if options.gen_impl_links {generate_impl_block(&et, make_variant_str_fns)} else {TextBlock::new()},
-            fmt_block: generate_impl_fmt_display(&et),
-            test_block: generate_testblock(&et),  
+            enumdeclaration: generate_enum_decl(et), 
+            get_all_variants_fn: generate_get_all_variants_fn(et), 
+            variants_as_str_module: if make_variant_str_fns {generate_variant_str_fns(et)} else {TextBlock::new()},
+            propfn_blocks: generate_property_fns(et),
+            impl_block:  if options.gen_impl_links {generate_impl_block(et, make_variant_str_fns)} else {TextBlock::new()},
+            fmt_block: generate_impl_fmt_display(et),
+            test_block: generate_testblock(et),  
         }
     }
     /// for printing to a singular file
@@ -169,9 +169,9 @@ impl <'a> EnumModule<'a> {
             self.propfn_blocks = vec![];
 
             if self.options.gen_variant_str_fns {
-                let var_file = format!("variantstr.rs");
-                self.imports.push(format!("mod variantstr;"));
-                self.imports.push(format!("use variantstr::*;"));
+                let var_file = "variantstr.rs";
+                self.imports.push("mod variantstr;".to_string());
+                self.imports.push("use variantstr::*;".to_string());
                 let var_file = nested_path.join(var_file);
                 let var_file = var_file.to_str().unwrap();
                 let mut lines = vec![format!("use super::{};", &self.enumname)];

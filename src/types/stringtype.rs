@@ -109,7 +109,7 @@ impl RTypeTrait for StringType {
         true // lol
     }
     fn get_depth(&self, counter: usize) -> usize {
-        counter + 0
+        counter
     }
     fn get_breadth(&self, counter: usize) -> usize {
         counter + 1

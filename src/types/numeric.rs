@@ -172,14 +172,14 @@ impl RTypeTrait for NumericType {
         let float_re = FLOAT_REGEX.get_or_init(|| Regex::new(FLOAT_REGEX_STR).unwrap());
         let unum_re = UNUMERIC_REGEX.get_or_init(|| Regex::new(UNUMERIC_REGEX_STR).unwrap());
         match self {
-            NumericType::f32 | NumericType::f64 => {if float_re.is_match(valuestr) {true} else {false}},
-            NumericType::u128 | NumericType::u64 | NumericType::u32 | NumericType::u16 |NumericType::u8 | NumericType::usize => {if unum_re.is_match(valuestr) {true} else {false}}
-            _ => {if num_re.is_match(valuestr) {true} else {false}}
+            NumericType::f32 | NumericType::f64 => float_re.is_match(valuestr),
+            NumericType::u128 | NumericType::u64 | NumericType::u32 | NumericType::u16 |NumericType::u8 | NumericType::usize => {unum_re.is_match(valuestr)}
+            _ => {num_re.is_match(valuestr)}
         }
         
     }
     fn get_depth(&self, counter: usize) -> usize {
-        counter + 0
+        counter
     }
     fn get_breadth(&self, counter: usize) -> usize {
         counter + 1
