@@ -12,6 +12,7 @@ mod trait_impl;
 mod testblock;
 
 use std::fs;
+use std::path::{PathBuf, Path};
 
 mod fragments;
 
@@ -110,11 +111,34 @@ impl <'a> EnumModule<'a> {
         // construct root filename
         let filepath = &self.options.path_to_outfile;
         let enum_lc = self.enumname.to_ascii_lowercase();
-        let parentpath = if filepath.is_file() {filepath.parent().unwrap().to_path_buf()} else {filepath.to_owned()};
+        let def_file_name = format!("{}.rs",enum_lc); 
 
-        let file_name = format!("{}.rs",enum_lc); 
-        let printfile = parentpath.join(file_name);
+        let mut parentpath: PathBuf = filepath.to_owned();
+        let mut printfile: PathBuf = parentpath.join(def_file_name);
+
+        // check if parent path already contains a filename to write to
+        if let Some(extension) = filepath.extension() {
+            if extension == "rs" {
+                // we already have a file name, lets just use that
+                parentpath = filepath.parent().unwrap().to_path_buf();
+                printfile = filepath.to_path_buf();
+            } else {
+                // we have an invalid extension, 
+                let new_filename = Path::new(filepath.file_stem().unwrap())
+                .with_extension("rs")
+                .to_owned();
+
+                parentpath = filepath.parent().unwrap().to_path_buf();
+                printfile = filepath.with_file_name(new_filename);
+            }
+        }
+        if !parentpath.exists() {
+            fs::create_dir_all(&parentpath)?;
+        }
+
         let mainfile = printfile.to_str().unwrap();
+        //println!("{}", mainfile);
+
         // will the functions be split into separate files?
         if self.options.split_files {
 

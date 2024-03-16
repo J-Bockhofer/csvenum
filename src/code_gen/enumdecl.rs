@@ -48,7 +48,7 @@ pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
     let const_varname = format!("{}_ALL_VARIANTS_ARRAY", enumname.to_ascii_uppercase());
 
     // declare the const array
-    let arr_decl = format!("const {}: [{}; {}] = [ ", const_varname, enumname, variants.len());
+    let arr_decl = format!("const {}: &'static [{}; {}] = &[ ", const_varname, enumname, variants.len());
     tb.open_closure(false);
     tb.add_line(arr_decl);
     for variant in variants { 
@@ -60,10 +60,10 @@ pub fn generate_get_all_variants_fn(et: &EnumTable) -> TextBlock {
     tb.close_closure(false);
 
     // declare the function
-    let fn_decl = format!("pub const fn {}_get_all_variants() -> [{}; {}]", enumname_lc, enumname, variants.len());
+    let fn_decl = format!("pub fn {}_get_all_variants<'a>() -> &'a [{}; {}]", enumname_lc, enumname, variants.len());
     tb.add_line(fn_decl);
     tb.open_closure(true);
-    tb.add_line_indented(String::from(const_varname));
+    tb.add_line_indented(format!("&{}", const_varname));
     tb.close_closure(true);
 
     tb

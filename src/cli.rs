@@ -14,9 +14,9 @@ struct Cli {
     /// Filename of the CSV file (required)
     filename_csv: String,
 
-    /// Path to the output file
+    /// Path to the output dir/file
     #[arg(short, long)]
-    outfile: Option<String>,
+    outpath: Option<String>,
 
     /// Whether to split property declarations into separate files, defaults to: false
     #[arg(short, long)]
@@ -39,8 +39,20 @@ struct Cli {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
+    // need to plug in outpath below the csv path
+
+
     let csv = args.filename_csv;
-    let outfile = if args.outfile.is_some() {PathBuf::from(args.outfile.unwrap())} else {PathBuf::from(csv.clone())};
+
+    let csv_path = PathBuf::from(&csv);
+    let csv_dir = csv_path.parent().expect("Failed to get CSV file directory");
+    let mut output_path = PathBuf::from(csv_dir);
+
+    if let Some(outpath) = &args.outpath {
+        output_path.push(outpath);
+    }
+
+    //let outfile = if args.outfile.is_some() {PathBuf::from(args.outfile.unwrap())} else {PathBuf::from(csv.clone())};
     let split_files = args.split_properties.unwrap_or_else(|| false);
     let gen_variant_str_fns = args.variant_str_fns.unwrap_or_else(|| true);
     let gen_impl_links = args.impl_links.unwrap_or_else(|| true);
@@ -48,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Construct the EnumOptions struct
     let options = EnumOptions {
-        path_to_outfile: outfile,
+        path_to_outfile: output_path,
         split_files,
         gen_variant_str_fns,
         gen_impl_links,

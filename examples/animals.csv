@@ -1,0 +1,5 @@
+TYPES,      Regex
+Animals,    Id_regex
+Cat,        "^cat[\d]{1,4}"
+Dog,        "^dog[\d]{1,4}"
+Cow,        "^cow[\d]{1,4}"

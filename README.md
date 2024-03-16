@@ -1,6 +1,6 @@
 # csvenum
 
-[Docs](https://docs.rs/csvenum)
+[Docs](https://docs.rs/csvenum) [Changelog](https://github.com/J-Bockhofer/csvenum/blob/main/CHANGELOG.md)
 
 CLI to generate Rust enums with associated constants from a csv-table. 
 
@@ -15,10 +15,6 @@ Not much fun, and LLMs still tend to have a short memory, making consistent resu
 So here's a code-gen to assist in creating enums with associated constants. Like route or query parameter bindings for an API.
 
 Just declare a table in a .csv, generate and you're done.
-
-Especially for painstakingly hand-coded, or macro-intensive libraries like [celes](https://crates.io/crates/celes), it may be worthwhile to consider including a .csv file in the source code. 
-
-This file could provide users with a convenient means to append their own data and library authors with a single source of truth for their constants.
 
 You can just grab a file like [this](https://github.com/J-Bockhofer/csvenum/blob/main/examples/country_data.csv), add type information and be good to go.
 
@@ -130,7 +126,7 @@ Most software will export fields with nested commas with quotes, so a tuple woul
 
 Duplicate values in a column will be collected into an array that holds all corresponding variants. 
 
-For now tables are limited to only include constant values, but there are plans to provide OnceLock<> implementations for others.
+For now tables are limited to only include constant values (i.e. types with constant initializers), but there are plans to provide OnceLock / Lazy implementations for others.
 
 Also there is an arbitrary but reasonable limit on value nesting depth to avoid headaches.
 
@@ -154,8 +150,8 @@ Arguments:
   <FILENAME_CSV>  Filename of the CSV file (required)
 
 Options:
-  -o, --outfile 
-          Path to the output file
+  -o, --outpath 
+          Path to the output dir/file
   -s, --split-properties 
           Whether to split property declarations into separate files, defaults to: false [possible values: true, false]
   -v, --variant-str-fns 
@@ -186,13 +182,14 @@ Generated Code:
 
 Available Types:
 
-- Const types: 
+- Const types (initialized by const expressions): 
         - numeric types 
         - &str
         - tuples 
         - arrays
 
 - Regex: 
+        - relies on the regex [crate](https://crates.io/crates/regex) being present `cargo add regex`
         - will create a const &str and a static `OnceLock<Regex>` 
         - "as"-method will return &Regex
         - "from"-method iterates over the associated regexes and returns the first match, i.e the matching variant
@@ -212,7 +209,7 @@ Available Types:
 
 2. Generate FromStr impl to check all associated string constants.
 
-3. Provide `OnceLock` wrappers for non-const statics.  
+3. Provide `OnceLock` or `Lazy` wrappers for non-const statics.  
 
 4. Option on data with missing values.
 
@@ -233,7 +230,7 @@ On a personal note, I find it easier having to check just a single location for 
 
 Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, so one less dependancy.
 
-
+It also allows for you to easily take parts out that you don't need anymore, or add/fix specific implementation for your needs.
 
 
 

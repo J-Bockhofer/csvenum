@@ -16,7 +16,7 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
     tb.add_line(format!("impl {}", enumname));
     tb.open_closure(true);
     // fn for get all,
-    let fn_get_all = format!("pub fn get_all_variants() -> [Self; {}]", variants.len());
+    let fn_get_all = format!("pub fn get_all_variants<'a>() -> &'a [Self; {}]", variants.len());
     tb.add_line_indented(fn_get_all);
     tb.open_closure(true);
     let linker = format!("{}_get_all_variants()", enumname_lc);
@@ -43,6 +43,7 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
         let col_type = &et.parsed_types[col];
         let no_ref_type = col_type.to_typestr_no_ref();
         let is_regex = if no_ref_type == "Regex".to_string() {true} else {false};
+        let has_dup = col_has_dup_vec[col];
 
         let typeprefix = if no_ref_type == "str".to_string() || is_regex {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
@@ -58,12 +59,18 @@ pub fn generate_impl_block(et: &EnumTable, with_var_fns: bool) -> TextBlock {
 
         if col_type.can_match_as_key() {
             
-            let twrapper = if col_has_dup_vec[col] { "Vec"} else {"Option"};
-
-            let fromfn_hdr = if !is_regex {format!(
-                "pub fn from_{}({}: {}) -> {}<Self>", prop_lc, prop_lc, col_type.to_typestr(), twrapper
-            )} else {format!(
-                "pub fn from_{}_is_match(haystack: &str) -> {}<Self>", prop_lc,  twrapper
+            let fromfn_hdr = if !is_regex {
+                if has_dup {
+                    format!(
+                        "pub fn from_{}<'a>({}: {}) -> &'a [Self]", prop_lc, prop_lc, col_type.to_typestr()
+                    )
+                } else {
+                    format!(
+                        "pub fn from_{}({}: {}) -> Option<Self>", prop_lc, prop_lc, col_type.to_typestr()
+                    )
+                }          
+               } else {format!(
+                "pub fn from_{}_is_match(haystack: &str) -> Option<Self>", prop_lc
             )};
             tb.add_line_indented(fromfn_hdr);
             tb.open_closure(true);

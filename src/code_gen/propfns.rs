@@ -25,6 +25,8 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         let typeprefix = if no_ref_type == "str".to_string() || col_is_regex {"&"} else {""};
         let prop_lc = prop_name.to_ascii_lowercase();
 
+        let col_typestr = format!("{}{}", typeprefix, no_ref_type);
+
         let col_has_dup = col_has_dup_vec[col];
         let col_dup_map = &dup_map[col];
 
@@ -35,7 +37,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
 
         astb.add_line(format!("/// Function to convert from {} to {}", enumname, prop_name));
         let asfn_hdr = format!(
-            "pub {}fn {}_as_{}({}: &{}) -> {}{}", fn_const, &enumname_lc, &prop_lc, enumname_lc, enumname, typeprefix, no_ref_type
+            "pub {}fn {}_as_{}({}: &{}) -> {}", fn_const, &enumname_lc, &prop_lc, enumname_lc, enumname, col_typestr
         );
         astb.add_line(asfn_hdr);
         astb.open_closure(true);
@@ -43,17 +45,22 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
         fromtb.add_line(format!("/// Function to convert from {} to {}", prop_name, enumname));
         let mut asmatchb = MatchBlock::new(enumname_lc.to_string(), true);
 
-        let twrapper = if col_has_dup { "Vec"} else {"Option"};
 
 
             // if col is regex the from function should not take a regex, that makes no sense, it should take a string and return the type that matches the associated regex
             // i do want a third function that checks if a string is valid for a given variant, this is a short one and goes: fn(&self, &str) -> true self.as_regex.is_match(&str)
         let fromfn_hdr = if col_is_regex {
             format!(
-            "pub fn {}_from_{}_is_match(haystack: &str) -> {}<{}>", enumname_lc, &prop_lc, twrapper, enumname)          
+            "pub fn {}_from_{}_is_match(haystack: &str) -> Option<{}>", enumname_lc, &prop_lc, enumname)          
         } else {
-            format!(
-            "pub fn {}_from_{}({}: {}) -> {}<{}>", enumname_lc, &prop_lc, &prop_lc, col_type.to_typestr(), twrapper, enumname)   
+            if col_has_dup {
+                format!(
+                    "pub fn {}_from_{}<'a>({}: {}) -> &'a [{}]", enumname_lc, &prop_lc, &prop_lc, col_typestr, enumname)  
+            } else {
+                format!(
+                    "pub fn {}_from_{}({}: {}) -> Option<{}>", enumname_lc, &prop_lc, &prop_lc, col_typestr, enumname)  
+            }
+ 
         } ;
         fromtb.add_line(fromfn_hdr);
         fromtb.open_closure(true);
@@ -106,7 +113,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
     
                 //const_names.push(const_name);
             }
-            if col_type.to_typestr_no_ref() != "bool" {
+            if no_ref_type != "bool" {
                 frommatchb.add_arm("_", "Option::None");
             }
         } else {
@@ -123,17 +130,17 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
                     collected_variants.push_str(&variant_name);
                 }
                 collected_variants.push_str("];");
-                let const_decl = format!("const {}: {} = {}", const_name, const_type, collected_variants);
+                let const_decl = format!("const {}: &'static {} = &{}", const_name, const_type, collected_variants);
                 pblock.add_line(const_doc);
                 pblock.add_line(const_decl);
-                frommatchb.add_arm(format!("{}", col_type.wrap_valuestr(&val_grp.0)), format!("{}.to_vec()", const_name) );
+                frommatchb.add_arm(format!("{}", col_type.wrap_valuestr(&val_grp.0)), format!("{}", const_name) );
 
 
                 grp_cnt += 1;
 
             }
             if col_type.to_typestr_no_ref() != "bool" {
-                frommatchb.add_arm("_", "vec![]");
+                frommatchb.add_arm("_", "&[]");
             }
             for row in 0..vars.len() {
                 let var_name = &vars[row];
@@ -158,7 +165,7 @@ pub fn generate_property_fns(et: &EnumTable) -> Vec<(String, TextBlock)> {
             fromtb.add_line_indented("for variant in variants {");
             fromtb.open_closure(false);
             fromtb.add_line_indented(format!(
-                "if {}_as_{}(&variant).is_match(haystack) {{return Some(variant)}}", &enumname_lc, prop_lc
+                "if {}_as_{}(&variant).is_match(haystack) {{return Some(variant.clone())}}", &enumname_lc, prop_lc
             ));
             fromtb.close_closure(true);
             fromtb.add_line_indented("None");

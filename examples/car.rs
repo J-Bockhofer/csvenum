@@ -24,7 +24,7 @@ pub enum Car
 }
 impl Car
 {
-    pub fn get_all_variants() -> [Self; 4]
+    pub fn get_all_variants<'a>() -> &'a [Self; 4]
     {
         car_get_all_variants()
     }
@@ -50,7 +50,7 @@ impl Car
     {
         car_as_is_expensive(self)
     }
-    pub fn from_is_expensive(is_expensive: bool) -> Vec<Self>
+    pub fn from_is_expensive<'a>(is_expensive: bool) -> &'a [Self]
     {
         car_from_is_expensive(is_expensive)
     }
@@ -69,15 +69,15 @@ impl std::fmt::Display for Car
     }
 }
 
-const CAR_ALL_VARIANTS_ARRAY: [Car; 4] = [ 
+const CAR_ALL_VARIANTS_ARRAY: &'static [Car; 4] = &[ 
     Car::A,
     Car::B,
     Car::C,
     Car::D,
 ];
-pub const fn car_get_all_variants() -> [Car; 4]
+pub fn car_get_all_variants<'a>() -> &'a [Car; 4]
 {
-    CAR_ALL_VARIANTS_ARRAY
+    &CAR_ALL_VARIANTS_ARRAY
 }
 
 // Variant string representation.
@@ -141,9 +141,9 @@ pub fn car_from_name(name: &str) -> Option<Car>
 
 // Constants for `is_expensive`
 /// Group of 2 variants with value: `false`
-const IS_EXPENSIVE_VALUE_GRP_0: [Car; 2] = [Car::A, Car::B, ];
+const IS_EXPENSIVE_VALUE_GRP_0: &'static [Car; 2] = &[Car::A, Car::B, ];
 /// Group of 2 variants with value: `true`
-const IS_EXPENSIVE_VALUE_GRP_1: [Car; 2] = [Car::C, Car::D, ];
+const IS_EXPENSIVE_VALUE_GRP_1: &'static [Car; 2] = &[Car::C, Car::D, ];
 
 /// Function to convert from Car to is_expensive
 pub const fn car_as_is_expensive(car: &Car) -> bool
@@ -157,11 +157,11 @@ pub const fn car_as_is_expensive(car: &Car) -> bool
 }
 
 /// Function to convert from is_expensive to Car
-pub fn car_from_is_expensive(is_expensive: bool) -> Vec<Car>
+pub fn car_from_is_expensive<'a>(is_expensive: bool) -> &'a [Car]
 {
     match is_expensive {
-        false => IS_EXPENSIVE_VALUE_GRP_0.to_vec(),
-        true => IS_EXPENSIVE_VALUE_GRP_1.to_vec(),
+        false => IS_EXPENSIVE_VALUE_GRP_0,
+        true => IS_EXPENSIVE_VALUE_GRP_1,
     }
 }
 #[cfg(test)]

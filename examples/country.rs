@@ -76,7 +76,7 @@ pub enum Country
 }
 impl Country
 {
-    pub fn get_all_variants() -> [Self; 12]
+    pub fn get_all_variants<'a>() -> &'a [Self; 12]
     {
         country_get_all_variants()
     }
@@ -138,7 +138,7 @@ impl std::fmt::Display for Country
     }
 }
 
-const COUNTRY_ALL_VARIANTS_ARRAY: [Country; 12] = [ 
+const COUNTRY_ALL_VARIANTS_ARRAY: &'static [Country; 12] = &[ 
     Country::AFG,
     Country::ALA,
     Country::ALB,
@@ -152,9 +152,9 @@ const COUNTRY_ALL_VARIANTS_ARRAY: [Country; 12] = [
     Country::ARG,
     Country::ARM,
 ];
-pub const fn country_get_all_variants() -> [Country; 12]
+pub fn country_get_all_variants<'a>() -> &'a [Country; 12]
 {
-    COUNTRY_ALL_VARIANTS_ARRAY
+    &COUNTRY_ALL_VARIANTS_ARRAY
 }
 
 // Variant string representation.
@@ -389,4 +389,3 @@ mod tests
 }
 
 fn main() {}
-

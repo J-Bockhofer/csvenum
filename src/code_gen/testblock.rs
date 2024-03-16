@@ -10,6 +10,16 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
     let vars = et.get_variants();
     let enumname_lc = enumname.to_ascii_lowercase();
     let col_has_dup_vec = et.get_col_has_duplicate_vec();
+    let num_cols = props.len();
+
+    if num_cols == 1 {
+        let single_type = &et.parsed_types[0];
+        let is_regex = if single_type.to_typestr_no_ref().contains("Regex") {true} else {false};
+        if is_regex {
+            // if our only type is a regex we dont return a test block
+            return TextBlock::new();
+        }
+    }
 
     tb.add_line(String::from(
         "#[cfg(test)]"
@@ -48,6 +58,8 @@ pub fn generate_testblock(et: &EnumTable) -> TextBlock {
         let is_regex = if col_type.to_typestr_no_ref().contains("Regex") {true} else {false};
         if is_regex { 
             // No test implemented for regex
+            
+
         } else {
             if col_can_match_as_key && !col_has_dup_vec[col] {
                 first_iter = false;
