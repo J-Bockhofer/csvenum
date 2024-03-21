@@ -199,6 +199,11 @@ impl RTypeTrait for RType {
             let typestr = captures.get(1).unwrap().as_str();
             return Ok(RType::String(reference, StringType::from_typestr(typestr)?));
         }
+        // check char, bc it doesnt nicely fit the regex
+        if typestr == "char" || typestr == "Char" {
+            return Ok(RType::String(reference, StringType::from_typestr(typestr)?));
+        }
+
         // then numeric - could just be is match
         if let Some(captures) = numeric_re.captures(&typestr) { 
             let typestr = captures.get(1).unwrap().as_str();

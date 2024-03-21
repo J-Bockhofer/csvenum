@@ -34,6 +34,11 @@ pub enum StringType {
     /// Property `typestr` with value `CStr` 
     /// 
     CStr,
+    /// char
+    /// 
+    /// Property `typestr` with value `char` 
+    /// 
+    char,
 }
 impl StringType {
     pub fn get_all_variants() -> Vec<StringType> {
@@ -44,6 +49,7 @@ impl StringType {
             StringType::OsStr,
             StringType::CString,
             StringType::CStr,
+            StringType::char,
         ]
     }
 }
@@ -54,7 +60,7 @@ const OSSTRING_TYPESTR: &'static str = "OsString";
 const OSSTR_TYPESTR: &'static str = "OsStr";
 const CSTRING_TYPESTR: &'static str = "CString";
 const CSTR_TYPESTR: &'static str = "CStr";
-
+const CHAR_TYPESTR: &'static str = "char";
 
 impl RTypeTrait for StringType {
     fn from_typestr<T: AsRef<str>>(typestr: T) -> Result<Self, super::TypeError> where Self: Sized {
@@ -66,6 +72,7 @@ impl RTypeTrait for StringType {
             OSSTR_TYPESTR => Ok(StringType::OsStr),
             CSTRING_TYPESTR => Ok(StringType::CString),
             CSTR_TYPESTR => Ok(StringType::CStr),
+            CHAR_TYPESTR | "Char" => Ok(StringType::char),
             _ => Err(TypeError::StringTypeUnknown(typestr.to_string())),
         }        
     }
@@ -78,6 +85,7 @@ impl RTypeTrait for StringType {
             StringType::OsStr => OSSTR_TYPESTR,
             StringType::CString => CSTRING_TYPESTR,
             StringType::CStr => CSTR_TYPESTR,
+            StringType::char => CHAR_TYPESTR,
         }
     }
     fn to_typestr_no_ref(&self) -> String {
@@ -101,12 +109,16 @@ impl RTypeTrait for StringType {
         match self 
         {
             StringType::str => true,
+            StringType::char => true,
             _ => {false},
         }        
     }
     #[allow(unused_variables)]
     fn value_is_valid(&self, valuestr: &str) -> bool {
-        true // lol
+        match self {
+            Self::char => {valuestr.len() == 1}
+            _ => {true}
+        }
     }
     fn get_depth(&self, counter: usize) -> usize {
         counter
@@ -115,7 +127,11 @@ impl RTypeTrait for StringType {
         counter + 1
     }
     fn wrap_valuestr(&self, valuestr: &str) -> String {
-        format!("\"{}\"", valuestr)
+        match self {
+            Self::char => {format!("'{}'", valuestr)}
+            _ => {format!("\"{}\"", valuestr)}
+        }        
+        
     }
     fn can_match_as_key(&self) -> bool {
         true
@@ -133,7 +149,17 @@ mod tests {
         let result = StringType::from_typestr(typestr).unwrap();
         let expected = StringType::str;
         assert_eq!(result, expected);
+        assert_eq!("\"c\"", result.wrap_valuestr("c"));
 
+        let typestr = "char".to_string();
+        let result = StringType::from_typestr(typestr).unwrap();
+        let expected = StringType::char;
+        assert_eq!(result, expected);
+
+        assert_eq!(true, result.value_is_valid("c"));
+        assert_eq!(false, result.value_is_valid("char"));
+        assert_eq!("'c'", result.wrap_valuestr("c"));
+        
     }
 
 }

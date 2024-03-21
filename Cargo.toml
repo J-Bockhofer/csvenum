@@ -1,8 +1,7 @@
 [package]
 name = "csvenum"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
-authors = ["Joris Bockhofer <joris.bockhofer@t-online.de>"]
 documentation = "https://docs.rs/csvenum"
 repository = "https://github.com/J-Bockhofer/csvenum"
 homepage = "https://github.com/J-Bockhofer/csvenum/README.md"

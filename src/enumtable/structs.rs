@@ -19,7 +19,7 @@ pub struct DummyVariant<'a> {
     pub name: &'a str,
     pub enum_name: &'a str,
     //pub assoc_vals: Vec<(&'a Property, String)>,
-
+    // pub str for doc? from designated DOC property column?
 }
 
 

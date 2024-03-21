@@ -181,17 +181,26 @@ Generated Code:
 Available Types:
 
 - Const types (initialized by const expressions): 
-        - numeric types 
+
+        - numeric types    
+
         - &str
+
         - tuples 
+
         - arrays
 
 - Regex: 
         - relies on the regex [crate](https://crates.io/crates/regex) being present, `cargo add regex`
+
         - will create a const &str and a static `OnceLock<Regex>` 
+
         - "as"-method will return &Regex
+
         - "from"-method iterates over the associated regexes and returns the first match, i.e the matching variant
+
         - nested Regex, i.e. Regex in tuples or arrays are not planned
+        
         - can't have duplicates for a given column/property 
 
 ## Known Issues
@@ -212,25 +221,6 @@ Available Types:
 4. Option on data with missing values.
 
 5. Static [HashMaps](https://docs.rs/phf/latest/phf/) for larger datasets.
-
-
-### Why not as a macro?
-
-Simple: I dont know macros well enough to pull this off, before this project I didn't even know what an AST was.
-
-But:
-
-Macros generate unnecessary overhead on every compilation in cases, where the data-layout can be determined early on.
-
-Having your enum transpiled from a .csv further lends itself to the vast tooling around csv's for data manipulation.
-
-On a personal note, I find it easier having to check just a single location for data validity, rather than scattered across multiple declarations.
-
-Additionally, doing code-gen over a CLI eliminates the need to add this crate to every project that choses to make use of it, so one less dependancy.
-
-It also allows for you to easily take parts out that you don't need anymore, or add/modify specific implementations for your needs.
-
-
 
 
 `Please report any issue you find or suggestion you have to further improve this tool!`
